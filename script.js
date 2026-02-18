@@ -61,13 +61,35 @@ document.addEventListener('DOMContentLoaded', () => {
         return `rgba(59, 130, 246, ${alpha})`; 
     }
 
+    // Helper to format currency based on settings
+    function formatCurrency(value) {
+        const s = (typeof DashboardTheme !== 'undefined' && DashboardTheme.settings) ? DashboardTheme.settings : { currency: 'USD', decimals: 2 };
+        let num = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value;
+        if (isNaN(num)) return value;
+
+        const currencySymbol = {
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£'
+        }[s.currency] || '$';
+
+        return currencySymbol + num.toLocaleString(undefined, {
+            minimumFractionDigits: s.decimals,
+            maximumFractionDigits: s.decimals
+        });
+    }
+
     // Fetch Data
     fetch('data.json')
         .then(response => response.json())
         .then(data => {
             // Update KPIs
-            if(document.getElementById('kpi-revenue')) document.getElementById('kpi-revenue').textContent = data.kpis.totalRevenue;
-            if(document.getElementById('kpi-users')) document.getElementById('kpi-users').textContent = data.kpis.activeUsers;
+            if(document.getElementById('kpi-revenue')) document.getElementById('kpi-revenue').textContent = formatCurrency(data.kpis.totalRevenue);
+            
+            // Format logic for other numbers might differ (e.g. users is not currency)
+            // But user asked for "decimales y signo peso a dolar a euro", implying money.
+            // Let's assume Users is just a number.
+            if(document.getElementById('kpi-users')) document.getElementById('kpi-users').textContent = data.kpis.activeUsers; 
             if(document.getElementById('kpi-signups')) document.getElementById('kpi-signups').textContent = data.kpis.newSignups;
             if(document.getElementById('kpi-satisfaction')) document.getElementById('kpi-satisfaction').textContent = data.kpis.satisfaction;
 
@@ -77,6 +99,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     ...commonOptions,
                     color: [accentHex], 
                     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                        borderColor: '#334155',
+                        textStyle: { color: '#e2e8f0' },
+                        formatter: function (params) {
+                             let result = params[0].name + '<br/>';
+                             params.forEach(item => {
+                                 result += item.marker + item.seriesName + ': ' + formatCurrency(item.value) + '<br/>';
+                             });
+                             return result;
+                        }
+                    },
                     xAxis: {
                         type: 'category',
                         boundaryGap: false,
@@ -86,7 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     yAxis: {
                         type: 'value',
                         splitLine: { lineStyle: { color: '#334155', type: 'dashed' } },
-                        axisLine: { show: false }
+                        axisLine: { show: false },
+                        axisLabel: {
+                             formatter: (value) => formatCurrency(value)
+                        }
                     },
                     series: [{
                         name: 'Revenue',
@@ -212,10 +250,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 hBarChart.setOption({
                     ...commonOptions,
                     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                    tooltip: {
+                         trigger: 'axis',
+                         backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                         borderColor: '#334155',
+                         textStyle: { color: '#e2e8f0' },
+                         formatter: function (params) {
+                             let result = params[0].name + '<br/>';
+                             params.forEach(item => {
+                                 // Assuming Sales is currency
+                                 result += item.marker + item.seriesName + ': ' + formatCurrency(item.value) + '<br/>';
+                             });
+                             return result;
+                        }
+                    },
                     xAxis: {
                         type: 'value',
                         splitLine: { lineStyle: { color: '#334155', type: 'dashed' } },
-                        axisLine: { show: false }
+                        axisLine: { show: false },
+                        axisLabel: {
+                             formatter: (value) => formatCurrency(value)
+                        }
                     },
                     yAxis: {
                         type: 'category',
@@ -353,7 +408,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if(kpiElem) { 
                 let val = parseInt(kpiElem.textContent.replace(/[^0-9]/g, '')) || 124500;
                 val = Math.floor(val * (1 + (Math.random() * 0.02 - 0.01)));
-                kpiElem.textContent = "$" + val.toLocaleString();
+                // Update with formatting
+                kpiElem.textContent = formatCurrency(val);
             }
 
             // Update Chart Data (simulation)
@@ -380,3 +436,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }, settings.refreshRate * 1000);
     }
 });
+
+// Draggable & Resizable Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const grid = document.getElementById('dashboard-grid');
+    if (grid && typeof Sortable !== 'undefined') {
+        new Sortable(grid, {
+            animation: 150,
+            handle: '.drag-handle', // Only drag via handle
+            ghostClass: 'opacity-50', // Class name for the drop placeholder
+            dragClass: 'opacity-100',
+            onEnd: function (evt) {
+                // Logic to save order if needed in future
+            }
+        });
+    }
+});
+
+// Global Resize Function
+window.resizeCard = function(btn, cols) {
+    const card = btn.closest('.card');
+    if (!card) return;
+
+    // Remove existing col-span classes specific to large screens
+    card.classList.remove('lg:col-span-1', 'lg:col-span-2', 'lg:col-span-3', 'lg:col-span-4');
+
+    // Add new class based on selection
+    // Default is col-span-1 if no class logic applies, but we use specific classes
+    if (cols === 1) card.classList.add('lg:col-span-1');
+    if (cols === 2) card.classList.add('lg:col-span-2');
+    if (cols === 3) card.classList.add('lg:col-span-3');
+    if (cols === 4) card.classList.add('lg:col-span-4');
+
+    // Trigger chart resize after transition
+    const chartDiv = card.querySelector('div[id$="Chart"]'); // Matches id ending in Chart
+    if (chartDiv && typeof echarts !== 'undefined') {
+        const chartInstance = echarts.getInstanceByDom(chartDiv);
+        if (chartInstance) {
+            // Use ResizeObserver or timeout to handle transition
+            setTimeout(() => {
+                chartInstance.resize();
+            }, 300); // Match CSS transition duration
+        }
+    }
+};

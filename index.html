@@ -33,6 +33,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="theme.js"></script> <!-- Load Theme Logic -->
     <style>
         :root {
@@ -235,9 +236,20 @@
       </div>
 
       <!-- Charts Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Main Line Chart -->
-        <div class="card lg:col-span-2">
+        <div class="card lg:col-span-4 relative group" data-id="lineChart">
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+             <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+             </div>
+             <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
+                <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
+                <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
+                <button onclick="resizeCard(this, 3)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="3 Columns">3x</button>
+                <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
+             </div>
+          </div>
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium text-white flex items-center gap-2">
               <span class="w-2 h-6 bg-accent rounded-full inline-block"></span>
@@ -253,7 +265,18 @@
         </div>
 
         <!-- Pie Chart -->
-        <div class="card">
+        <div class="card lg:col-span-2 relative group" data-id="pieChart">
+           <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+             <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+             </div>
+             <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
+                <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
+                <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
+                <button onclick="resizeCard(this, 3)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="3 Columns">3x</button>
+                <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
+             </div>
+          </div>
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium text-white">
               Traffic Sources (Pie Chart)
@@ -264,7 +287,18 @@
         </div>
 
         <!-- Tower/Bar Chart -->
-        <div class="card">
+        <div class="card lg:col-span-2 relative group" data-id="barChart">
+           <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+             <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+             </div>
+             <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
+                <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
+                <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
+                <button onclick="resizeCard(this, 3)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="3 Columns">3x</button>
+                <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
+             </div>
+          </div>
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium text-white">
               Server Load (Tower/Stack Chart)
@@ -274,7 +308,17 @@
         </div>
 
             <!-- New: Performance Radar -->
-            <div class="card">
+            <div class="card lg:col-span-1 relative group" data-id="radarChart">
+               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+                 <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                 </div>
+                 <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
+                    <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
+                    <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
+                    <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
+                 </div>
+              </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium text-white">System Performance (Radar)</h3>
                 </div>
@@ -282,7 +326,17 @@
             </div>
 
             <!-- Top Regions Horizontal Bar -->
-            <div class="card">
+            <div class="card lg:col-span-1 relative group" data-id="hBarChart">
+               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+                 <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                 </div>
+                 <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
+                    <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
+                    <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
+                    <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
+                 </div>
+              </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium text-white">Top Regions (Horizontal Bar)</h3>
                 </div>
@@ -290,7 +344,17 @@
             </div>
 
             <!-- New: System Health Gauge -->
-            <div class="card">
+            <div class="card lg:col-span-1 relative group" data-id="gaugeChart">
+               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+                 <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                 </div>
+                 <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
+                    <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
+                    <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
+                    <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
+                 </div>
+              </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium text-white">System Health (Gauge)</h3>
                 </div>
@@ -298,7 +362,17 @@
             </div>
 
             <!-- New: Marketing Funnel -->
-            <div class="card">
+            <div class="card lg:col-span-1 relative group" data-id="funnelChart">
+               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
+                 <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
+                 </div>
+                 <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
+                    <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
+                    <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
+                    <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
+                 </div>
+              </div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium text-white">Conversion Funnel (Funnel)</h3>
                 </div>

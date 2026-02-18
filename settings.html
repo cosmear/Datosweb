@@ -138,7 +138,7 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card mb-6">
              <h2 class="text-lg font-medium text-white mb-4">Dashboard Data</h2>
              <div class="grid grid-cols-1 gap-6">
 
@@ -153,19 +153,68 @@
                      </select>
                 </div>
 
-                <!-- Simulate Data Toggle -->
+                <!-- Simulation Toggle -->
                 <div class="flex items-center justify-between">
-                    <div>
-                        <span class="text-sm font-medium text-white block">Simulate Real-time Updates</span>
-                        <span class="text-xs text-gray-500">Randomly fluctuates numbers on the dashboard</span>
+                     <div>
+                        <label for="simulation-toggle" class="block text-sm font-medium text-gray-300">Data Simulation</label>
+                        <p class="text-xs text-gray-500">Enable random real-time data fluctuations.</p>
                     </div>
-                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="simulate" id="simulate-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300"/>
-                        <label for="simulate-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-dark-700 cursor-pointer"></label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="simulation-toggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+            
+        <!-- Branding & Formatting Settings (New) -->
+        <div class="card space-y-6">
+            <h2 class="text-lg font-medium text-white mb-4">Formatting</h2>
+
+            <!-- Font Size -->
+            <div>
+                <label for="font-size" class="block text-sm font-medium text-gray-300 mb-2">Font Size</label>
+                <div class="relative">
+                    <select id="font-size" class="appearance-none bg-dark-800 border border-dark-700 text-white text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5 pr-8 cursor-pointer hover:bg-dark-700 transition-colors">
+                        <option value="text-sm">Small</option>
+                        <option value="text-base">Medium (Default)</option>
+                        <option value="text-lg">Large</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                 </div>
+            </div>
 
-             </div>
+            <!-- Currency -->
+             <div>
+                <label for="currency-select" class="block text-sm font-medium text-gray-300 mb-2">Currency</label>
+                 <div class="relative">
+                    <select id="currency-select" class="appearance-none bg-dark-800 border border-dark-700 text-white text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5 pr-8 cursor-pointer hover:bg-dark-700 transition-colors">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                    </select>
+                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decimal Places -->
+             <div>
+                <label for="decimals-select" class="block text-sm font-medium text-gray-300 mb-2">Decimal Places</label>
+                 <div class="relative">
+                    <select id="decimals-select" class="appearance-none bg-dark-800 border border-dark-700 text-white text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5 pr-8 cursor-pointer hover:bg-dark-700 transition-colors">
+                        <option value="0">0 (e.g. 100)</option>
+                        <option value="1">1 (e.g. 100.5)</option>
+                        <option value="2">2 (e.g. 100.50)</option>
+                    </select>
+                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="mt-6 flex justify-end">
@@ -194,35 +243,60 @@
             const settings = DashboardTheme.settings;
 
             // Set color
-            for (const [key, value] of Object.entries(DashboardTheme.colors)) {
-                if (value.hex === settings.accentColor) {
+            for (const [key, value] of Object.entries(DashboardTheme.accents)) {
+                if (value === settings.accentColor) {
                     document.getElementById(`color-${key}`).checked = true;
                 }
             }
 
             // Set refresh rate
-            document.getElementById('refresh-rate').value = settings.refreshRate || 0;
+            if(document.getElementById('refresh-rate')) {
+                document.getElementById('refresh-rate').value = settings.refreshRate || 0;
+            }
 
             // Set simulation
-            document.getElementById('simulate-toggle').checked = settings.simulateData;
+            if(document.getElementById('simulation-toggle')) {
+                document.getElementById('simulation-toggle').checked = settings.simulateData;
+            }
+
+            // Set formatting settings
+            if(document.getElementById('font-size')) {
+                document.getElementById('font-size').value = settings.fontSize || 'text-base';
+            }
+            if(document.getElementById('currency-select')) {
+                document.getElementById('currency-select').value = settings.currency || 'USD';
+            }
+            if(document.getElementById('decimals-select')) {
+                document.getElementById('decimals-select').value = settings.decimals !== undefined ? settings.decimals : 2;
+            }
         });
 
         // Save Function
         function saveAndApply() {
             const selectedColorRadio = document.querySelector('input[name="accent"]:checked');
+            // If nothing checked, default to blue or keep current? Let's default to blue if none found, but ideally one is checked.
             const colorKey = selectedColorRadio ? selectedColorRadio.value : 'blue';
-            const accentHex = DashboardTheme.colors[colorKey].hex;
+            // DashboardTheme.colors was undefined in previous code, it should be DashboardTheme.accents based on theme.js inspection
+            const accentHex = DashboardTheme.accents[colorKey] || '#3b82f6';
             
             const refreshRate = parseInt(document.getElementById('refresh-rate').value);
-            const simulateData = document.getElementById('simulate-toggle').checked;
+            const simulateData = document.getElementById('simulation-toggle').checked;
+            
+            const fontSize = document.getElementById('font-size').value;
+            const currency = document.getElementById('currency-select').value;
+            const decimals = parseInt(document.getElementById('decimals-select').value);
 
             const newSettings = {
                 accentColor: accentHex,
                 refreshRate: refreshRate,
-                simulateData: simulateData
+                simulateData: simulateData,
+                fontSize: fontSize,
+                currency: currency,
+                decimals: decimals
             };
 
-            DashboardTheme.save(newSettings);
+            // Correct function name is saveSettings based on theme.js
+            DashboardTheme.saveSettings(newSettings);
 
             // Show Toast
             const toast = document.getElementById('save-toast');
