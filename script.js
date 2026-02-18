@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const barChartDom = document.getElementById('barChart');
     const radarChartDom = document.getElementById('radarChart');
     const hBarChartDom = document.getElementById('hBarChart');
+    const gaugeChartDom = document.getElementById('gaugeChart');
+    const funnelChartDom = document.getElementById('funnelChart');
 
     // Init ECharts instances if elements exist
     const lineChart = lineChartDom ? echarts.init(lineChartDom, 'dark') : null;
@@ -20,6 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const barChart = barChartDom ? echarts.init(barChartDom, 'dark') : null;
     const radarChart = radarChartDom ? echarts.init(radarChartDom, 'dark') : null;
     const hBarChart = hBarChartDom ? echarts.init(hBarChartDom, 'dark') : null;
+    const gaugeChart = gaugeChartDom ? echarts.init(gaugeChartDom, 'dark') : null;
+    const funnelChart = funnelChartDom ? echarts.init(funnelChartDom, 'dark') : null;
 
     // Common Chart Options for "Professional" Look
     const commonOptions = {
@@ -38,8 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // Get accent color from settings
-    const currentSettings = DashboardTheme.settings;
-    const accentHex = currentSettings.accentColor;
+    let accentHex = '#3b82f6'; // Default
+    if (typeof DashboardTheme !== 'undefined' && DashboardTheme.settings) {
+        accentHex = DashboardTheme.settings.accentColor;
+    }
 
     // Helper to convert hex to rgba
     function hexToRgba(hex, alpha) {
@@ -52,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             c= '0x'+c.join('');
             return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
         }
-        // Fallback or if hex is somehow invalid, return a default blue
         return `rgba(59, 130, 246, ${alpha})`; 
     }
 
@@ -70,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(lineChart) {
                 lineChart.setOption({
                     ...commonOptions,
-                    color: [accentHex], // Set default color
+                    color: [accentHex], 
                     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
                     xAxis: {
                         type: 'category',
@@ -155,7 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (index === 0) seriesColor = accentHex;
                         if (index === 1) seriesColor = hexToRgba(accentHex, 0.6);
                         if (index === 2) seriesColor = '#475569'; 
-                        
                         return {
                             ...series,
                             type: 'bar',
@@ -238,6 +242,85 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
+            // Gauge Chart (System Health)
+            if(gaugeChart && data.systemHealth) {
+                gaugeChart.setOption({
+                    ...commonOptions,
+                    series: [{
+                        type: 'gauge',
+                        startAngle: 90,
+                        endAngle: -270,
+                        pointer: { show: false },
+                        progress: {
+                            show: true,
+                            overlap: false,
+                            roundCap: true,
+                            clip: false,
+                            itemStyle: {
+                                borderWidth: 1,
+                                borderColor: '#1e293b',
+                                color: accentHex
+                            }
+                        },
+                        axisLine: { lineStyle: { width: 40, color: [[1, '#1e293b']] } },
+                        splitLine: { show: false, distance: 0, length: 10 },
+                        axisTick: { show: false },
+                        axisLabel: { show: false, distance: 50 },
+                        data: [{
+                            value: data.systemHealth.value,
+                            name: data.systemHealth.name,
+                            title: { offsetCenter: ['0%', '-10%'] },
+                            detail: {
+                                valueAnimation: true,
+                                offsetCenter: ['0%', '20%'],
+                                formatter: '{value}%',
+                                color: 'white',
+                                fontSize: 30
+                            }
+                        }],
+                        title: { fontSize: 14, color: '#94a3b8' },
+                        detail: { fontSize: 30, color: '#fff', formatter: '{value}%' }
+                    }]
+                });
+            }
+
+            // Funnel Chart (Marketing)
+            if(funnelChart && data.marketingFunnel) {
+                funnelChart.setOption({
+                    ...commonOptions,
+                    tooltip: { trigger: 'item' },
+                    legend: { top: '5%', left: 'center', textStyle: { color: '#94a3b8' } },
+                    series: [{
+                        name: 'Conversion',
+                        type: 'funnel',
+                        left: '10%',
+                        top: 60,
+                        bottom: 60,
+                        width: '80%',
+                        min: 0,
+                        max: 100,
+                        minSize: '0%',
+                        maxSize: '100%',
+                        sort: 'descending',
+                        gap: 2,
+                        label: { show: true, position: 'inside' },
+                        labelLine: { length: 10, lineStyle: { width: 1, type: 'solid' } },
+                        itemStyle: { borderColor: '#1e293b', borderWidth: 1 },
+                        emphasis: { label: { fontSize: 20 } },
+                        data: data.marketingFunnel.map((item, idx) => {
+                             return {
+                                value: item.value,
+                                name: item.name,
+                                itemStyle: {
+                                    color: hexToRgba(accentHex, 1 - (idx * 0.15))
+                                }
+                            };
+                        })
+                    }]
+                });
+            }
+
+
         })
         .catch(error => console.error('Error fetching data:', error));
 
@@ -248,10 +331,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if(barChart) barChart.resize();
         if(radarChart) radarChart.resize();
         if(hBarChart) hBarChart.resize();
+        if(gaugeChart) gaugeChart.resize();
+        if(funnelChart) funnelChart.resize();
     });
 
     // Theme & Simulation Logic
-    const settings = DashboardTheme.settings;
+    const settings = (typeof DashboardTheme !== 'undefined' && DashboardTheme.settings) ? DashboardTheme.settings : { simulateData: false, refreshRate: 0 };
     
     // Helper to randomize data slightly
     function fluctuatingData(originalData, variance = 0.1) {
@@ -265,8 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(() => {
             // Update KPIs randomly
             const kpiElem = document.getElementById('kpi-revenue');
-            if(kpiElem) { // Check if we are on dashboard
-                // Quick hack parsing just to show animation
+            if(kpiElem) { 
                 let val = parseInt(kpiElem.textContent.replace(/[^0-9]/g, '')) || 124500;
                 val = Math.floor(val * (1 + (Math.random() * 0.02 - 0.01)));
                 kpiElem.textContent = "$" + val.toLocaleString();
@@ -286,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  }
              }
 
-        }, 2000); // Update every 2s
+        }, 2000); 
     }
 
     // Refresh Page Logic
