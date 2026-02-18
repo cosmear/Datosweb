@@ -1,0 +1,122 @@
+{
+  "kpis": {
+    "totalRevenue": "$124,500",
+    "activeUsers": "1,240",
+    "newSignups": "345",
+    "satisfaction": "98%"
+  },
+  "trafficSource": [
+    { "value": 1048, "name": "Search Engine" },
+    { "value": 735, "name": "Direct" },
+    { "value": 580, "name": "Email" },
+    { "value": 484, "name": "Union Ads" },
+    { "value": 300, "name": "Video Ads" }
+  ],
+  "serverLoad": {
+    "categories": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "series": [
+      {
+        "name": "Web Server",
+        "data": [120, 132, 101, 134, 90, 230, 210]
+      },
+      {
+        "name": "Database",
+        "data": [220, 182, 191, 234, 290, 330, 310]
+      },
+      {
+        "name": "Email Server",
+        "data": [150, 232, 201, 154, 190, 330, 410]
+      }
+    ]
+  },
+  "reportsData": [
+    { "id": "#INV-2049", "date": "Oct 24, 2026", "customer": "Nova Systems", "amount": "$1,200.00", "status": "Paid" },
+    { "id": "#INV-2048", "date": "Oct 24, 2026", "customer": "Tech Solutions", "amount": "$850.00", "status": "Pending" },
+    { "id": "#INV-2047", "date": "Oct 23, 2026", "customer": "Acme Corp", "amount": "$2,300.00", "status": "Paid" },
+    { "id": "#INV-2046", "date": "Oct 23, 2026", "customer": "Global Industries", "amount": "$450.00", "status": "Overdue" },
+    { "id": "#INV-2045", "date": "Oct 22, 2026", "customer": "Stark Ent.", "amount": "$5,000.00", "status": "Paid" },
+    { "id": "#INV-2044", "date": "Oct 21, 2026", "customer": "Wayne Ltd.", "amount": "$3,200.00", "status": "Pending" },
+    { "id": "#INV-2043", "date": "Oct 21, 2026", "customer": "Cyberdyne", "amount": "$900.00", "status": "Paid" },
+    { "id": "#INV-2042", "date": "Oct 20, 2026", "customer": "Oscorp", "amount": "$1,150.00", "status": "Paid" },
+    { "id": "#INV-2041", "date": "Oct 19, 2026", "customer": "Umbrella Corp", "amount": "$600.00", "status": "Overdue" },
+    { "id": "#INV-2040", "date": "Oct 18, 2026", "customer": "Massive Dynamic", "amount": "$1,800.00", "status": "Paid" }
+  ],
+  "narrativeReports": [
+    {
+        "version": "October 2026",
+        "date": "2026-10-31",
+        "summary": "This month saw a significant uptick in user engagement driven by the new mobile app release. Revenue exceeded projections by 12.5%.",
+        "growth": [
+            "Mobile traffic increased by 45% due to the new iOS app launch.",
+            "Recurring revenue grew by 8% as enterprise clients renewed contracts.",
+            "User satisfaction scores reached an all-time high of 98%."
+        ],
+        "decline": [
+            "Desktop usage dropped slightly by 5%, likely cannibalized by mobile.",
+            "Ad revenue from third-party networks decreased by 2% due to seasonal trends."
+        ],
+        "analysis": "Overall, October was a breakout month. The strategy to pivot to mobile-first is paying off faster than anticipated. We should continue to invest in mobile feature parity to capture the remaining desktop users."
+    },
+    {
+        "version": "September 2026",
+        "date": "2026-09-30",
+        "summary": "Steady growth across all sectors with minor fluctuations in server stability.",
+        "growth": [
+            "New signups increased by 15% following the 'Back to School' campaign.",
+            "Social media referrals doubled after the viral marketing push."
+        ],
+        "decline": [
+            "Server uptime dropped to 99.5% due to a database migration issue.",
+            "Customer support ticket volume increased by 20% related to the migration."
+        ],
+        "analysis": "September was a stabilizing period. While marketing efforts brought in new users, our infrastructure struggled to keep up. The focus for next month must be on technical debt reduction and scaling database capacity."
+    },
+     {
+        "version": "August 2026",
+        "date": "2026-08-31",
+        "summary": "A quiet summer month with expected seasonal dips in overall activity.",
+        "growth": [
+            "International traffic grew by 5% as we expanded CDN nodes to Asia.",
+             "Churn rate decreased to 1.2%, the lowest in company history."
+        ],
+        "decline": [
+            "Overall active daily users dropped by 10% (seasonal vacation effect).",
+            "Sales team velocity slowed down, missing quota by 5%."
+        ],
+        "analysis": "As expected for August, business was slower. However, the reduction in churn is a very positive signal that our retention features are working. We used the downtime to prepare for the Q4 push."
+    }
+  ],
+  "performanceRadar": {
+      "indicators": [
+          { "name": "Speed", "max": 100 },
+          { "name": "Reliability", "max": 100 },
+          { "name": "Cost", "max": 100 },
+          { "name": "Security", "max": 100 },
+          { "name": "Usability", "max": 100 },
+          { "name": "Support", "max": 100 }
+      ],
+      "data": [
+          { "value": [85, 90, 70, 95, 80, 88], "name": "Current Year" },
+          { "value": [60, 75, 80, 70, 65, 78], "name": "Last Year" }
+      ]
+  },
+  "topRegions": {
+      "categories": ["North America", "Europe", "Asia", "South America", "Africa", "Oceania"],
+      "data": [1200, 950, 800, 600, 300, 150]
+  },
+  "systemHealth": {
+      "value": 88,
+      "name": "Health Score"
+  },
+  "marketingFunnel": [
+      { "value": 100, "name": "Impressions" },
+      { "value": 80, "name": "Clicks" },
+      { "value": 60, "name": "Visits" },
+      { "value": 40, "name": "Inquiries" },
+      { "value": 20, "name": "Orders" }
+  ],
+  "revenueTrend": {
+    "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
+    "data": [820, 932, 901, 934, 1290, 1330, 1320]
+  }
+}

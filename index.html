@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Professional Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              dark: {
+                900: "#0f172a", // Slate 900
+                800: "#1e293b", // Slate 800
+                700: "#334155", // Slate 700
+              },
+              accent: {
+                500: "#3b82f6", // Blue 500
+                400: "#60a5fa", // Blue 400
+              },
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="theme.js"></script> <!-- Load Theme Logic -->
+    <style>
+        :root {
+            --accent-color: #3b82f6; /* Default Blue */
+        }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #0f172a;
+        color: #e2e8f0;
+      }
+        /* Custom Utility for Accent Color application */
+        .text-accent { color: var(--accent-color) !important; }
+        .bg-accent { background-color: var(--accent-color) !important; }
+        .border-accent { border-color: var(--accent-color) !important; }
+        .ring-accent { box-shadow: 0 0 0 2px var(--accent-color); }
+        .shadow-accent { box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.25); } /* simplified */
+
+      .card {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 0.75rem;
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 1.5rem;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 10px 15px -3px rgba(0, 0, 0, 0.3),
+          0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        border-color: var(--accent-color); /* Hover border is accent color */
+      }
+    </style>
+  </head>
+  <body class="antialiased min-h-screen flex flex-col">
+    <!-- Top Navigation -->
+    <nav class="bg-dark-800 border-b border-dark-700 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <!-- Dynamic Gradient Title using CSS var -->
+              <span
+                class="text-2xl font-bold text-transparent bg-clip-text"
+                style="background-image: linear-gradient(to right, var(--accent-color), #a855f7);"
+              >
+                DATA VISUALIZER
+              </span>
+            </div>
+            <div class="hidden md:block">
+              <div class="ml-10 flex items-baseline space-x-4">
+                <!-- Enhanced Active Link -->
+                <a href="index.html" class="bg-dark-900 text-accent ring-1 ring-accent px-3 py-2 rounded-md text-sm font-bold shadow-[0_0_15px_rgba(0,0,0,0.5)] shadow-accent/20">Dashboard</a>
+                <a
+                  href="reports.html"
+                  class="text-gray-300 hover:bg-dark-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >Reports</a
+                >
+                <a
+                  href="settings.html"
+                  class="text-gray-300 hover:bg-dark-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >Settings</a
+                >
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="text-sm text-gray-400">
+              <span id="current-time"></span>
+            </div>
+            <!-- Update user avatar ring to dynamic accent -->
+            <div
+              class="h-8 w-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-accent"
+            >
+              JS
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- KPIs -->
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div class="card relative overflow-hidden group hover:ring-1 hover:ring-accent transition-all">
+          <div class="absolute right-0 top-0 h-full w-1 bg-accent"></div>
+          <dt class="text-sm font-medium text-gray-400 truncate">
+            Total Revenue
+          </dt>
+          <dd class="mt-1 text-3xl font-semibold text-white" id="kpi-revenue">
+            --
+          </dd>
+          <div class="mt-2 flex items-center text-sm text-accent">
+            <svg
+              class="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              ></path>
+            </svg>
+            <span>+12.5%</span>
+            <span class="text-gray-500 ml-2">from last month</span>
+          </div>
+        </div>
+
+        <div class="card relative overflow-hidden hover:ring-1 hover:ring-accent transition-all">
+          <div class="absolute right-0 top-0 h-full w-1 bg-gray-700"></div>
+          <dt class="text-sm font-medium text-gray-400 truncate">
+            Active Users
+          </dt>
+          <dd class="mt-1 text-3xl font-semibold text-white" id="kpi-users">
+            --
+          </dd>
+          <div class="mt-2 flex items-center text-sm text-accent">
+            <svg
+              class="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              ></path>
+            </svg>
+            <span>+5.2%</span>
+            <span class="text-gray-500 ml-2">from last month</span>
+          </div>
+        </div>
+
+        <div class="card relative overflow-hidden hover:ring-1 hover:ring-accent transition-all">
+          <div class="absolute right-0 top-0 h-full w-1 bg-gray-700"></div>
+          <dt class="text-sm font-medium text-gray-400 truncate">
+            New Signups
+          </dt>
+          <dd class="mt-1 text-3xl font-semibold text-white" id="kpi-signups">
+            --
+          </dd>
+          <div class="mt-2 flex items-center text-sm text-accent">
+            <svg
+              class="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              ></path>
+            </svg>
+            <span>+2.4%</span>
+            <span class="text-gray-500 ml-2">from last month</span>
+          </div>
+        </div>
+
+        <div class="card relative overflow-hidden hover:ring-1 hover:ring-accent transition-all">
+          <div class="absolute right-0 top-0 h-full w-1 bg-gray-700"></div>
+          <dt class="text-sm font-medium text-gray-400 truncate">
+            Satisfaction
+          </dt>
+          <dd
+            class="mt-1 text-3xl font-semibold text-white"
+            id="kpi-satisfaction"
+          >
+            --
+          </dd>
+          <div class="mt-2 flex items-center text-sm text-accent">
+            <svg
+              class="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 10l7 7m0 0l7-7m-7 7V3"
+              ></path>
+            </svg>
+            <span>+1.2%</span>
+            <span class="text-gray-500 ml-2">from last month</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Main Line Chart -->
+        <div class="card lg:col-span-2">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-white flex items-center gap-2">
+              <span class="w-2 h-6 bg-accent rounded-full inline-block"></span>
+              Revenue Trend (Normal Graph)
+            </h3>
+            <button
+              class="text-xs text-white hover:opacity-80 transition-colors bg-accent px-3 py-1.5 rounded font-medium shadow-lg shadow-accent/20"
+            >
+              Export Data
+            </button>
+          </div>
+          <div id="lineChart" class="w-full h-80"></div>
+        </div>
+
+        <!-- Pie Chart -->
+        <div class="card">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-white">
+              Traffic Sources (Pie Chart)
+            </h3>
+          </div>
+          <!-- Flex container to center chart if needed, but ECharts handles it -->
+          <div id="pieChart" class="w-full h-80"></div>
+        </div>
+
+        <!-- Tower/Bar Chart -->
+        <div class="card">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-white">
+              Server Load (Tower/Stack Chart)
+            </h3>
+          </div>
+          <div id="barChart" class="w-full h-80"></div>
+        </div>
+      </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 border-t border-dark-700 pt-6 pb-6">
+            <p class="text-center text-gray-500 text-sm">
+                &copy; 2026 Professional Data Viz. Developed by <span class="text-accent font-semibold">LoopSmith</span>
+            </p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

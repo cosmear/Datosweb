@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Professional Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="theme.js"></script> <!-- Load Theme Logic -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                     colors: {
+                        dark: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-color: #3b82f6; 
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        .text-accent { color: var(--accent-color) !important; }
+        .bg-accent { background-color: var(--accent-color) !important; }
+        .border-accent { border-color: var(--accent-color) !important; }
+        .ring-accent { box-shadow: 0 0 0 2px var(--accent-color); }
+
+        .card {
+            background-color: #1e293b; 
+            border: 1px solid #334155;
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+        }
+        
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: var(--accent-color);
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: var(--accent-color);
+        }
+
+        /* Color Radio */
+        .color-radio:checked + label .check-icon {
+            display: block;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Top Navigation -->
+    <nav class="bg-dark-800 border-b border-dark-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                         <span class="text-2xl font-bold text-transparent bg-clip-text" style="background-image: linear-gradient(to right, var(--accent-color), #a855f7);">
+                            DATA VISUALIZER
+                        </span>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="index.html" class="text-gray-300 hover:bg-dark-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</a>
+                            <a href="reports.html" class="text-gray-300 hover:bg-dark-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Reports</a>
+                            <a href="settings.html" class="bg-dark-900 text-accent px-3 py-2 rounded-md text-sm font-medium border border-dark-700">Settings</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                     <div class="text-sm text-gray-400">
+                        <span id="current-time"></span>
+                     </div>
+                    <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center text-white font-bold text-xs ring-accent">
+                        JS
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 w-full max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        
+        <h1 class="text-2xl font-bold text-white mb-6">Settings</h1>
+
+        <div class="card mb-6">
+            <h2 class="text-lg font-medium text-white mb-4">Appearance</h2>
+            <div class="grid grid-cols-1 gap-6">
+                
+                <!-- Accent Color -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-3">Accent Color</label>
+                    <div class="flex gap-4">
+                        <div class="relative">
+                            <input type="radio" name="accent" value="blue" id="color-blue" class="color-radio peer sr-only">
+                            <label for="color-blue" class="w-10 h-10 rounded-full cursor-pointer bg-blue-500 block hover:ring-2 hover:ring-offset-2 hover:ring-offset-dark-900 hover:ring-blue-500 transition-all flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </label>
+                        </div>
+                        <div class="relative">
+                            <input type="radio" name="accent" value="purple" id="color-purple" class="color-radio peer sr-only">
+                            <label for="color-purple" class="w-10 h-10 rounded-full cursor-pointer bg-purple-500 block hover:ring-2 hover:ring-offset-2 hover:ring-offset-dark-900 hover:ring-purple-500 transition-all flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </label>
+                        </div>
+                        <div class="relative">
+                            <input type="radio" name="accent" value="emerald" id="color-emerald" class="color-radio peer sr-only">
+                            <label for="color-emerald" class="w-10 h-10 rounded-full cursor-pointer bg-emerald-500 block hover:ring-2 hover:ring-offset-2 hover:ring-offset-dark-900 hover:ring-emerald-500 transition-all flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </label>
+                        </div>
+                        <div class="relative">
+                            <input type="radio" name="accent" value="orange" id="color-orange" class="color-radio peer sr-only">
+                            <label for="color-orange" class="w-10 h-10 rounded-full cursor-pointer bg-orange-500 block hover:ring-2 hover:ring-offset-2 hover:ring-offset-dark-900 hover:ring-orange-500 transition-all flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card">
+             <h2 class="text-lg font-medium text-white mb-4">Dashboard Data</h2>
+             <div class="grid grid-cols-1 gap-6">
+
+                <!-- Refresh Rate -->
+                <div>
+                     <label class="block text-sm font-medium text-gray-400 mb-2">Auto-refresh Rate</label>
+                     <select id="refresh-rate" class="bg-dark-800 border border-dark-700 text-white text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5">
+                        <option value="0">Disabled</option>
+                        <option value="5">Every 5 seconds</option>
+                        <option value="10">Every 10 seconds</option>
+                        <option value="30">Every 30 seconds</option>
+                     </select>
+                </div>
+
+                <!-- Simulate Data Toggle -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-medium text-white block">Simulate Real-time Updates</span>
+                        <span class="text-xs text-gray-500">Randomly fluctuates numbers on the dashboard</span>
+                    </div>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="simulate" id="simulate-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300"/>
+                        <label for="simulate-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-dark-700 cursor-pointer"></label>
+                    </div>
+                </div>
+
+             </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button onclick="saveAndApply()" class="bg-accent text-white font-bold py-2 px-6 rounded hover:opacity-90 transition-opacity shadow-lg">
+                Save Changes
+            </button>
+        </div>
+        
+        <div id="save-toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
+            Settings Saved!
+        </div>
+
+    </main>
+
+    <script>
+        // Clock
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('es-ES');
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Load current settings into form
+        document.addEventListener('DOMContentLoaded', () => {
+            const settings = DashboardTheme.settings;
+
+            // Set color
+            for (const [key, value] of Object.entries(DashboardTheme.colors)) {
+                if (value.hex === settings.accentColor) {
+                    document.getElementById(`color-${key}`).checked = true;
+                }
+            }
+
+            // Set refresh rate
+            document.getElementById('refresh-rate').value = settings.refreshRate || 0;
+
+            // Set simulation
+            document.getElementById('simulate-toggle').checked = settings.simulateData;
+        });
+
+        // Save Function
+        function saveAndApply() {
+            const selectedColorRadio = document.querySelector('input[name="accent"]:checked');
+            const colorKey = selectedColorRadio ? selectedColorRadio.value : 'blue';
+            const accentHex = DashboardTheme.colors[colorKey].hex;
+            
+            const refreshRate = parseInt(document.getElementById('refresh-rate').value);
+            const simulateData = document.getElementById('simulate-toggle').checked;
+
+            const newSettings = {
+                accentColor: accentHex,
+                refreshRate: refreshRate,
+                simulateData: simulateData
+            };
+
+            DashboardTheme.save(newSettings);
+
+            // Show Toast
+            const toast = document.getElementById('save-toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
