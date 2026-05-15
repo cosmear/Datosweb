@@ -1,25 +1,28 @@
 <!doctype html>
-<html lang="es" class="dark">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Professional Dashboard</title>
+    <title>Mailing Performance Report</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: "class",
         theme: {
           extend: {
             colors: {
-              dark: {
-                900: "#0f172a", // Slate 900
-                800: "#1e293b", // Slate 800
-                700: "#334155", // Slate 700
+              skyglass: {
+                50: "#F7FBFF",
+                100: "#EAF6FF",
+                200: "#CFEAFF",
+                300: "#7DD3FC",
+                400: "#38BDF8",
+                500: "#0EA5E9",
+                900: "#0F172A",
               },
-              accent: {
-                500: "#3b82f6", // Blue 500
-                400: "#60a5fa", // Blue 400
-              },
+            },
+            boxShadow: {
+              glass: "0 24px 80px rgba(14, 165, 233, 0.12)",
+              soft: "0 14px 44px rgba(14, 165, 233, 0.10)",
             },
             fontFamily: {
               sans: ["Inter", "sans-serif"],
@@ -29,364 +32,376 @@
       };
     </script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <script src="theme.js"></script> <!-- Load Theme Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="theme.js"></script>
     <style>
-        :root {
-            --accent-color: #3b82f6; /* Default Blue */
-        }
+      :root {
+        --accent-color: #38bdf8;
+        --accent-secondary: #0ea5e9;
+        --page-bg: #f7fbff;
+        --surface-bg: rgba(255, 255, 255, 0.78);
+        --surface-strong: rgba(255, 255, 255, 0.92);
+        --border-soft: rgba(56, 189, 248, 0.16);
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --shadow-soft: rgba(14, 165, 233, 0.12);
+      }
+
       body {
         font-family: "Inter", sans-serif;
-        background-color: #0f172a;
-        color: #e2e8f0;
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 28%),
+          radial-gradient(circle at 85% 18%, rgba(125, 211, 252, 0.26), transparent 20%),
+          radial-gradient(circle at 25% 100%, rgba(14, 165, 233, 0.12), transparent 26%),
+          var(--page-bg);
+        color: var(--text-main);
       }
-        /* Custom Utility for Accent Color application */
-        .text-accent { color: var(--accent-color) !important; }
-        .bg-accent { background-color: var(--accent-color) !important; }
-        .border-accent { border-color: var(--accent-color) !important; }
-        .ring-accent { box-shadow: 0 0 0 2px var(--accent-color); }
-        .shadow-accent { box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.25); } /* simplified */
 
-      .card {
-        background-color: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 0.75rem;
-        box-shadow:
-          0 4px 6px -1px rgba(0, 0, 0, 0.1),
-          0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        padding: 1.5rem;
-        transition:
-          transform 0.2s,
-          box-shadow 0.2s;
+      .glass-card {
+        background: linear-gradient(180deg, var(--surface-strong), var(--surface-bg));
+        border: 1px solid var(--border-soft);
+        border-radius: 1.75rem;
+        backdrop-filter: blur(18px);
+        box-shadow: 0 24px 80px var(--shadow-soft);
       }
-      .card:hover {
+
+      .glass-card:hover {
         transform: translateY(-2px);
-        box-shadow:
-          0 10px 15px -3px rgba(0, 0, 0, 0.3),
-          0 4px 6px -2px rgba(0, 0, 0, 0.1);
-        border-color: var(--accent-color); /* Hover border is accent color */
+        box-shadow: 0 32px 90px rgba(14, 165, 233, 0.14);
+      }
+
+      .metric-card {
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease,
+          border-color 0.25s ease;
+      }
+
+      .metric-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(125, 211, 252, 0.12));
+        pointer-events: none;
+      }
+
+      .panel-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 1.5rem;
+      }
+
+      .panel-grid > * {
+        grid-column: span 12;
+      }
+
+      @media (min-width: 1024px) {
+        .panel-grid .chart-span {
+          grid-column: span 7;
+        }
+
+        .panel-grid .analysis-span {
+          grid-column: span 5;
+        }
+      }
+
+      .chart-shell {
+        min-height: 360px;
+      }
+
+      .blob {
+        position: fixed;
+        z-index: -1;
+        border-radius: 9999px;
+        filter: blur(60px);
+        opacity: 0.5;
+      }
+
+      .blob-one {
+        top: 6rem;
+        left: -5rem;
+        width: 16rem;
+        height: 16rem;
+        background: rgba(56, 189, 248, 0.18);
+      }
+
+      .blob-two {
+        top: 20rem;
+        right: -4rem;
+        width: 18rem;
+        height: 18rem;
+        background: rgba(125, 211, 252, 0.24);
+      }
+
+      .blob-three {
+        bottom: 2rem;
+        left: 18%;
+        width: 14rem;
+        height: 14rem;
+        background: rgba(14, 165, 233, 0.12);
       }
     </style>
   </head>
-  <body class="antialiased min-h-screen flex flex-col">
-    <!-- Top Navigation -->
-    <nav class="bg-dark-800 border-b border-dark-700 sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <!-- Dynamic Gradient Title using CSS var -->
-              <span
-                class="text-2xl font-bold text-transparent bg-clip-text"
-                style="background-image: linear-gradient(to right, var(--accent-color), #a855f7);"
-              >
-                DATA VISUALIZER
-              </span>
-            </div>
-            <div class="hidden md:block">
-              <div class="ml-10 flex items-baseline space-x-4">
-                <!-- Enhanced Active Link -->
-                <a href="index.html" class="bg-dark-900 text-accent ring-1 ring-accent px-3 py-2 rounded-md text-sm font-bold shadow-[0_0_15px_rgba(0,0,0,0.5)] shadow-accent/20">Dashboard</a>
-                <a
-                  href="reports.html"
-                  class="text-gray-300 hover:bg-dark-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  >Reports</a
-                >
-                <a
-                  href="settings.html"
-                  class="text-gray-300 hover:bg-dark-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  >Settings</a
-                >
-              </div>
-            </div>
+  <body class="min-h-screen antialiased">
+    <div class="blob blob-one"></div>
+    <div class="blob blob-two"></div>
+    <div class="blob blob-three"></div>
+
+    <nav class="sticky top-0 z-50 border-b border-skyglass-200/70 bg-white/72 backdrop-blur-xl">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-8">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.32em] text-sky-500">LoopSmith</p>
+            <h1 class="text-lg font-semibold text-slate-900">Mailing Performance Report</h1>
           </div>
-          <div class="flex items-center gap-4">
-            <div class="text-sm text-gray-400">
-              <span id="current-time"></span>
-            </div>
-            <!-- Update user avatar ring to dynamic accent -->
-            <div
-              class="h-8 w-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-accent"
-            >
-              JS
-            </div>
+          <div class="hidden items-center gap-2 rounded-full border border-sky-100 bg-white/80 p-1 text-sm shadow-soft md:flex">
+            <a href="index.html" class="rounded-full bg-sky-500 px-4 py-2 font-semibold text-white">Dashboard</a>
+            <a href="reports.html" class="rounded-full px-4 py-2 font-medium text-slate-600 transition hover:bg-sky-50 hover:text-slate-900">Reports</a>
+            <a href="settings.html" class="rounded-full px-4 py-2 font-medium text-slate-600 transition hover:bg-sky-50 hover:text-slate-900">Settings</a>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="hidden text-right sm:block">
+            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Actualizado</p>
+            <p id="current-time" class="text-sm font-medium text-slate-700"></p>
+          </div>
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-white/90 text-sm font-bold text-sky-600 shadow-soft">
+            MP
           </div>
         </div>
       </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="flex-1 w-full max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <!-- KPIs -->
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div class="card relative overflow-hidden group hover:ring-1 hover:ring-accent transition-all">
-          <div class="absolute right-0 top-0 h-full w-1 bg-accent"></div>
-          <dt class="text-sm font-medium text-gray-400 truncate">
-            Total Revenue
-          </dt>
-          <dd class="mt-1 text-3xl font-semibold text-white" id="kpi-revenue">
-            --
-          </dd>
-          <div class="mt-2 flex items-center text-sm text-accent">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              ></path>
-            </svg>
-            <span>+12.5%</span>
-            <span class="text-gray-500 ml-2">from last month</span>
-          </div>
-        </div>
-
-        <div class="card relative overflow-hidden hover:ring-1 hover:ring-accent transition-all">
-          <div class="absolute right-0 top-0 h-full w-1 bg-gray-700"></div>
-          <dt class="text-sm font-medium text-gray-400 truncate">
-            Active Users
-          </dt>
-          <dd class="mt-1 text-3xl font-semibold text-white" id="kpi-users">
-            --
-          </dd>
-          <div class="mt-2 flex items-center text-sm text-accent">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              ></path>
-            </svg>
-            <span>+5.2%</span>
-            <span class="text-gray-500 ml-2">from last month</span>
-          </div>
-        </div>
-
-        <div class="card relative overflow-hidden hover:ring-1 hover:ring-accent transition-all">
-          <div class="absolute right-0 top-0 h-full w-1 bg-gray-700"></div>
-          <dt class="text-sm font-medium text-gray-400 truncate">
-            New Signups
-          </dt>
-          <dd class="mt-1 text-3xl font-semibold text-white" id="kpi-signups">
-            --
-          </dd>
-          <div class="mt-2 flex items-center text-sm text-accent">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              ></path>
-            </svg>
-            <span>+2.4%</span>
-            <span class="text-gray-500 ml-2">from last month</span>
-          </div>
-        </div>
-
-        <div class="card relative overflow-hidden hover:ring-1 hover:ring-accent transition-all">
-          <div class="absolute right-0 top-0 h-full w-1 bg-gray-700"></div>
-          <dt class="text-sm font-medium text-gray-400 truncate">
-            Satisfaction
-          </dt>
-          <dd
-            class="mt-1 text-3xl font-semibold text-white"
-            id="kpi-satisfaction"
-          >
-            --
-          </dd>
-          <div class="mt-2 flex items-center text-sm text-accent">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 10l7 7m0 0l7-7m-7 7V3"
-              ></path>
-            </svg>
-            <span>+1.2%</span>
-            <span class="text-gray-500 ml-2">from last month</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Charts Grid -->
-      <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Main Line Chart -->
-        <div class="card lg:col-span-4 relative group" data-id="lineChart">
-          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-             <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-             </div>
-             <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
-                <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
-                <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
-                <button onclick="resizeCard(this, 3)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="3 Columns">3x</button>
-                <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
-             </div>
-          </div>
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-white flex items-center gap-2">
-              <span class="w-2 h-6 bg-accent rounded-full inline-block"></span>
-              Revenue Trend (Normal Graph)
-            </h3>
-            <button
-              class="text-xs text-white hover:opacity-80 transition-colors bg-accent px-3 py-1.5 rounded font-medium shadow-lg shadow-accent/20"
-            >
-              Export Data
-            </button>
-          </div>
-          <div id="lineChart" class="w-full h-80"></div>
-        </div>
-
-        <!-- Pie Chart -->
-        <div class="card lg:col-span-2 relative group" data-id="pieChart">
-           <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-             <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-             </div>
-             <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
-                <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
-                <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
-                <button onclick="resizeCard(this, 3)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="3 Columns">3x</button>
-                <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
-             </div>
-          </div>
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-white">
-              Traffic Sources (Pie Chart)
-            </h3>
-          </div>
-          <!-- Flex container to center chart if needed, but ECharts handles it -->
-          <div id="pieChart" class="w-full h-80"></div>
-        </div>
-
-        <!-- Tower/Bar Chart -->
-        <div class="card lg:col-span-2 relative group" data-id="barChart">
-           <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-             <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-             </div>
-             <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
-                <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
-                <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
-                <button onclick="resizeCard(this, 3)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="3 Columns">3x</button>
-                <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
-             </div>
-          </div>
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-white">
-              Server Load (Tower/Stack Chart)
-            </h3>
-          </div>
-          <div id="barChart" class="w-full h-80"></div>
-        </div>
-
-            <!-- New: Performance Radar -->
-            <div class="card lg:col-span-1 relative group" data-id="radarChart">
-               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                 <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-                 </div>
-                 <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
-                    <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
-                    <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
-                    <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
-                 </div>
-              </div>
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-white">System Performance (Radar)</h3>
-                </div>
-                <div id="radarChart" class="w-full h-80"></div>
-            </div>
-
-            <!-- Top Regions Horizontal Bar -->
-            <div class="card lg:col-span-1 relative group" data-id="hBarChart">
-               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                 <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-                 </div>
-                 <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
-                    <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
-                    <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
-                    <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
-                 </div>
-              </div>
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-white">Top Regions (Horizontal Bar)</h3>
-                </div>
-                <div id="hBarChart" class="w-full h-80"></div>
-            </div>
-
-            <!-- New: System Health Gauge -->
-            <div class="card lg:col-span-1 relative group" data-id="gaugeChart">
-               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                 <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-                 </div>
-                 <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
-                    <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
-                    <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
-                    <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
-                 </div>
-              </div>
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-white">System Health (Gauge)</h3>
-                </div>
-                <div id="gaugeChart" class="w-full h-80"></div>
-            </div>
-
-            <!-- New: Marketing Funnel -->
-            <div class="card lg:col-span-1 relative group" data-id="funnelChart">
-               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex gap-2">
-                 <div class="cursor-move p-1 bg-dark-800 rounded text-gray-400 hover:text-white drag-handle" title="Drag">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
-                 </div>
-                 <div class="flex bg-dark-800 rounded border border-dark-700 overflow-hidden">
-                    <button onclick="resizeCard(this, 1)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="1 Column">1x</button>
-                    <button onclick="resizeCard(this, 2)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white border-r border-dark-700 font-mono" title="2 Columns">2x</button>
-                    <button onclick="resizeCard(this, 4)" class="p-1 hover:bg-dark-700 text-xs text-gray-400 hover:text-white font-mono" title="Full Width">4x</button>
-                 </div>
-              </div>
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-white">Conversion Funnel (Funnel)</h3>
-                </div>
-                <div id="funnelChart" class="w-full h-80"></div>
-            </div>
-
-      </div>
-
-        <!-- Footer -->
-        <footer class="mt-8 border-t border-dark-700 pt-6 pb-6">
-            <p class="text-center text-gray-500 text-sm">
-                &copy; 2026 Professional Data Viz. Developed by <span class="text-accent font-semibold">LoopSmith</span>
+    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <section class="glass-card mb-8 overflow-hidden p-6 transition md:p-8">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div class="max-w-3xl">
+            <p class="mb-3 text-xs font-semibold uppercase tracking-[0.32em] text-sky-500">
+              Performance · Marzo a Mayo
             </p>
-        </footer>
+            <h2 class="max-w-2xl text-3xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+              Mailing Performance Report
+            </h2>
+            <p class="mt-4 max-w-2xl text-base leading-7 text-slate-500 md:text-lg">
+              Análisis de campañas, entregabilidad, engagement y desuscripciones.
+            </p>
+            <p id="dashboard-intro" class="mt-6 max-w-3xl text-sm leading-7 text-slate-600 md:text-base"></p>
+          </div>
+          <div class="flex flex-col items-start gap-3 lg:items-end">
+            <button
+              id="downloadExcelBtn"
+              class="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-sky-600"
+            >
+              <span>Descargar reporte Excel</span>
+            </button>
+            <p class="max-w-xs text-sm leading-6 text-slate-500">
+              Exporta resumen, métricas mensuales, campañas limpias, suscripciones y PNG de gráficos.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <article class="glass-card metric-card relative overflow-hidden p-6">
+          <p class="relative text-sm font-medium text-slate-500">Campañas analizadas</p>
+          <p id="kpi-campaigns" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
+          <p class="relative mt-3 text-sm text-slate-500">Comunicaciones con métricas válidas dentro del CSV.</p>
+        </article>
+        <article class="glass-card metric-card relative overflow-hidden p-6">
+          <p class="relative text-sm font-medium text-slate-500">Enviados totales</p>
+          <p id="kpi-sent" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
+          <p class="relative mt-3 text-sm text-slate-500">Volumen total impactado entre marzo, abril y mayo.</p>
+        </article>
+        <article class="glass-card metric-card relative overflow-hidden p-6">
+          <p class="relative text-sm font-medium text-slate-500">Entregados totales</p>
+          <p id="kpi-delivered" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
+          <p class="relative mt-3 text-sm text-slate-500">Base que efectivamente recibió la comunicación.</p>
+        </article>
+        <article class="glass-card metric-card relative overflow-hidden p-6">
+          <p class="relative text-sm font-medium text-slate-500">Open Rate único ponderado</p>
+          <p id="kpi-open-rate" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
+          <p class="relative mt-3 text-sm text-slate-500">Calculado sobre aperturas únicas y entregados.</p>
+        </article>
+        <article class="glass-card metric-card relative overflow-hidden p-6">
+          <p class="relative text-sm font-medium text-slate-500">CTOR global</p>
+          <p id="kpi-ctor" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
+          <p class="relative mt-3 text-sm text-slate-500">Clicks únicos sobre aperturas únicas.</p>
+        </article>
+        <article class="glass-card metric-card relative overflow-hidden p-6">
+          <p class="relative text-sm font-medium text-slate-500">Desuscripciones totales</p>
+          <p id="kpi-unsubs" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
+          <p class="relative mt-3 text-sm text-slate-500">Se informa el dato real del CSV, sin completar faltantes.</p>
+        </article>
+      </section>
+
+      <section class="panel-grid mb-8">
+        <article class="glass-card chart-span p-6 md:p-7">
+          <div class="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Chart 01</p>
+              <h3 class="mt-2 text-2xl font-semibold text-slate-900">Volumen y entregabilidad mensual</h3>
+            </div>
+          </div>
+          <div id="volumeDeliverabilityChart" class="chart-shell w-full"></div>
+        </article>
+        <article class="glass-card analysis-span p-6 md:p-7">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Análisis</p>
+          <h3 class="mt-2 text-2xl font-semibold text-slate-900">Dónde mejora la operación</h3>
+          <p id="volume-analysis" class="mt-5 text-sm leading-7 text-slate-600 md:text-base"></p>
+          <div class="mt-6 grid gap-4 sm:grid-cols-3">
+            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
+              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Marzo</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-900">68,70%</p>
+              <p class="mt-1 text-sm text-slate-500">Entregabilidad</p>
+            </div>
+            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
+              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Abril</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-900">97,62%</p>
+              <p class="mt-1 text-sm text-slate-500">Entregabilidad</p>
+            </div>
+            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
+              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Mayo</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-900">96,39%</p>
+              <p class="mt-1 text-sm text-slate-500">Entregabilidad</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="glass-card analysis-span p-6 md:p-7">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Análisis</p>
+          <h3 class="mt-2 text-2xl font-semibold text-slate-900">Lectura de engagement</h3>
+          <p id="engagement-analysis" class="mt-5 text-sm leading-7 text-slate-600 md:text-base"></p>
+          <div class="mt-6 rounded-3xl border border-sky-100 bg-white/80 p-5">
+            <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Insight</p>
+            <p class="mt-3 text-base font-medium leading-7 text-slate-800">
+              Verde lidera por volumen de aperturas y clicks. Rojo se destaca en CTOR, pero con una base mínima.
+            </p>
+          </div>
+        </article>
+        <article class="glass-card chart-span p-6 md:p-7">
+          <div class="mb-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Chart 02</p>
+            <h3 class="mt-2 text-2xl font-semibold text-slate-900">Engagement por campaña</h3>
+          </div>
+          <div id="engagementChart" class="chart-shell w-full"></div>
+        </article>
+
+        <article class="glass-card chart-span p-6 md:p-7">
+          <div class="mb-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Chart 03</p>
+            <h3 class="mt-2 text-2xl font-semibold text-slate-900">Calidad de base y fricción de envío</h3>
+          </div>
+          <div id="qualityChart" class="chart-shell w-full"></div>
+        </article>
+        <article class="glass-card analysis-span p-6 md:p-7">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Análisis</p>
+          <h3 class="mt-2 text-2xl font-semibold text-slate-900">El quiebre operativo</h3>
+          <p id="quality-analysis" class="mt-5 text-sm leading-7 text-slate-600 md:text-base"></p>
+          <div class="mt-6 space-y-3">
+            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
+              <p class="text-sm font-semibold text-slate-800">0,72% Not Sent</p>
+              <p class="mt-1 text-sm text-slate-500">MAR_05_SELECCIONES_ESPECIALES marca el cambio de calidad más evidente.</p>
+            </div>
+            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
+              <p class="text-sm font-semibold text-slate-800">Bounce rate usado en el panel</p>
+              <p class="mt-1 text-sm text-slate-500">Se calcula como Bounces / Enviados para medir fricción sobre el volumen emitido.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="glass-card analysis-span p-6 md:p-7">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Análisis</p>
+          <h3 class="mt-2 text-2xl font-semibold text-slate-900">Segmentación Cava Regalo</h3>
+          <p id="segmentation-analysis" class="mt-5 text-sm leading-7 text-slate-600 md:text-base"></p>
+        </article>
+        <article class="glass-card chart-span p-6 md:p-7">
+          <div class="mb-5">
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Chart 04</p>
+            <h3 class="mt-2 text-2xl font-semibold text-slate-900">Comparación de segmentación: Cava Regalo</h3>
+          </div>
+          <div id="segmentationChart" class="chart-shell w-full"></div>
+        </article>
+      </section>
+
+      <section class="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+        <article class="glass-card p-6 md:p-7">
+          <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Tabla</p>
+              <h3 class="mt-2 text-2xl font-semibold text-slate-900">Suscripciones y desuscripciones</h3>
+            </div>
+          </div>
+          <div class="mt-6 overflow-hidden rounded-[1.5rem] border border-sky-100 bg-white/75">
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-left text-sm">
+                <thead class="bg-sky-50/90 text-slate-500">
+                  <tr>
+                    <th class="px-5 py-4 font-semibold">Mes</th>
+                    <th class="px-5 py-4 font-semibold">Suscripciones</th>
+                    <th class="px-5 py-4 font-semibold">Desuscripciones</th>
+                    <th class="px-5 py-4 font-semibold">Tasa de desuscripción sobre entregados</th>
+                    <th class="px-5 py-4 font-semibold">Observación</th>
+                  </tr>
+                </thead>
+                <tbody id="subscription-table-body" class="divide-y divide-sky-100 text-slate-700"></tbody>
+              </table>
+            </div>
+          </div>
+          <p id="subscription-disclaimer" class="mt-5 text-sm leading-7 text-slate-500"></p>
+        </article>
+
+        <article class="glass-card p-6 md:p-7">
+          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Conclusiones</p>
+          <h3 class="mt-2 text-2xl font-semibold text-slate-900">Lectura recomendada</h3>
+          <div class="mt-6 space-y-4">
+            <div class="rounded-3xl border border-sky-100 bg-white/80 p-5">
+              <p class="text-sm font-semibold text-slate-800">Operativa</p>
+              <p id="operational-conclusion" class="mt-2 text-sm leading-7 text-slate-600"></p>
+            </div>
+            <div class="rounded-3xl border border-sky-100 bg-white/80 p-5">
+              <p class="text-sm font-semibold text-slate-800">Engagement</p>
+              <p id="engagement-conclusion" class="mt-2 text-sm leading-7 text-slate-600"></p>
+            </div>
+            <div class="rounded-3xl border border-sky-100 bg-white/80 p-5">
+              <p class="text-sm font-semibold text-slate-800">Cierre</p>
+              <p id="final-conclusion" class="mt-2 text-sm leading-7 text-slate-600"></p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="glass-card p-6 md:p-7">
+        <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Detalle</p>
+            <h3 class="mt-2 text-2xl font-semibold text-slate-900">Campañas limpias del CSV</h3>
+          </div>
+          <p class="text-sm text-slate-500">Se ignoran títulos de mes y filas vacías sin métricas.</p>
+        </div>
+        <div class="mt-6 overflow-hidden rounded-[1.5rem] border border-sky-100 bg-white/75">
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+              <thead class="bg-sky-50/90 text-slate-500">
+                <tr>
+                  <th class="px-4 py-4 font-semibold">Mes</th>
+                  <th class="px-4 py-4 font-semibold">Campaña</th>
+                  <th class="px-4 py-4 font-semibold">Enviados</th>
+                  <th class="px-4 py-4 font-semibold">Entregados</th>
+                  <th class="px-4 py-4 font-semibold">Open Rate</th>
+                  <th class="px-4 py-4 font-semibold">CTOR</th>
+                  <th class="px-4 py-4 font-semibold">CTR entregados</th>
+                  <th class="px-4 py-4 font-semibold">Not Sent</th>
+                </tr>
+              </thead>
+              <tbody id="campaign-table-body" class="divide-y divide-sky-100 text-slate-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
 
     <script src="script.js"></script>

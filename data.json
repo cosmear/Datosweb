@@ -1,122 +1,375 @@
 {
-  "kpis": {
-    "totalRevenue": "$124,500",
-    "activeUsers": "1,240",
-    "newSignups": "345",
-    "satisfaction": "98%"
+  "mailingKpis": {
+    "campaignsAnalyzed": 12,
+    "totalSent": 156377,
+    "totalDelivered": 125858,
+    "weightedOpenRate": 0.3025,
+    "globalCtor": 0.0662,
+    "totalUnsubscribers": 240,
+    "executiveSummary": "El período analizado reúne 12 comunicaciones de mailing entre marzo, abril y mayo. En total se enviaron 156.377 piezas, con 125.858 entregadas. El open rate único ponderado fue de 30,25% y el CTOR global fue de 6,62%. La evolución más relevante está en la mejora de entregabilidad: las campañas con Not Sent alto promediaban 34,80%, mientras que las campañas depuradas bajan a 2,29%.",
+    "dashboardIntro": "El período analizado reúne 12 comunicaciones de mailing entre marzo, abril y mayo. En total se enviaron 156.377 piezas, con 125.858 entregadas. El open rate único ponderado fue de 30,25% y el CTOR global fue de 6,62%. El principal cambio operativo se observa en la reducción del Not Sent: las campañas con mayor problema de entrega superaban el 30%, mientras que las campañas depuradas se estabilizan cerca del 2,29%."
   },
-  "trafficSource": [
-    { "value": 1048, "name": "Search Engine" },
-    { "value": 735, "name": "Direct" },
-    { "value": 580, "name": "Email" },
-    { "value": 484, "name": "Union Ads" },
-    { "value": 300, "name": "Video Ads" }
-  ],
-  "serverLoad": {
-    "categories": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    "series": [
-      {
-        "name": "Web Server",
-        "data": [120, 132, 101, 134, 90, 230, 210]
-      },
-      {
-        "name": "Database",
-        "data": [220, 182, 191, 234, 290, 330, 310]
-      },
-      {
-        "name": "Email Server",
-        "data": [150, 232, 201, 154, 190, 330, 410]
-      }
-    ]
-  },
-  "reportsData": [
-    { "id": "#INV-2049", "date": "Oct 24, 2026", "customer": "Nova Systems", "amount": "$1,200.00", "status": "Paid" },
-    { "id": "#INV-2048", "date": "Oct 24, 2026", "customer": "Tech Solutions", "amount": "$850.00", "status": "Pending" },
-    { "id": "#INV-2047", "date": "Oct 23, 2026", "customer": "Acme Corp", "amount": "$2,300.00", "status": "Paid" },
-    { "id": "#INV-2046", "date": "Oct 23, 2026", "customer": "Global Industries", "amount": "$450.00", "status": "Overdue" },
-    { "id": "#INV-2045", "date": "Oct 22, 2026", "customer": "Stark Ent.", "amount": "$5,000.00", "status": "Paid" },
-    { "id": "#INV-2044", "date": "Oct 21, 2026", "customer": "Wayne Ltd.", "amount": "$3,200.00", "status": "Pending" },
-    { "id": "#INV-2043", "date": "Oct 21, 2026", "customer": "Cyberdyne", "amount": "$900.00", "status": "Paid" },
-    { "id": "#INV-2042", "date": "Oct 20, 2026", "customer": "Oscorp", "amount": "$1,150.00", "status": "Paid" },
-    { "id": "#INV-2041", "date": "Oct 19, 2026", "customer": "Umbrella Corp", "amount": "$600.00", "status": "Overdue" },
-    { "id": "#INV-2040", "date": "Oct 18, 2026", "customer": "Massive Dynamic", "amount": "$1,800.00", "status": "Paid" }
-  ],
-  "narrativeReports": [
+  "monthlyMetrics": [
     {
-        "version": "October 2026",
-        "date": "2026-10-31",
-        "summary": "This month saw a significant uptick in user engagement driven by the new mobile app release. Revenue exceeded projections by 12.5%.",
-        "growth": [
-            "Mobile traffic increased by 45% due to the new iOS app launch.",
-            "Recurring revenue grew by 8% as enterprise clients renewed contracts.",
-            "User satisfaction scores reached an all-time high of 98%."
-        ],
-        "decline": [
-            "Desktop usage dropped slightly by 5%, likely cannibalized by mobile.",
-            "Ad revenue from third-party networks decreased by 2% due to seasonal trends."
-        ],
-        "analysis": "Overall, October was a breakout month. The strategy to pivot to mobile-first is paying off faster than anticipated. We should continue to invest in mobile feature parity to capture the remaining desktop users."
+      "month": "Marzo",
+      "sent": 92107,
+      "delivered": 63275,
+      "notSent": 27689,
+      "opensUnique": 17999,
+      "clickUnique": 990,
+      "unsubscribers": 119,
+      "deliverabilityRate": 0.687,
+      "notSentRate": 0.3006,
+      "openRate": 0.2845,
+      "ctor": 0.055,
+      "ctrDelivered": 0.0156,
+      "bounceRate": 0.0142,
+      "unsubscribeRate": 0.0019
     },
     {
-        "version": "September 2026",
-        "date": "2026-09-30",
-        "summary": "Steady growth across all sectors with minor fluctuations in server stability.",
-        "growth": [
-            "New signups increased by 15% following the 'Back to School' campaign.",
-            "Social media referrals doubled after the viral marketing push."
-        ],
-        "decline": [
-            "Server uptime dropped to 99.5% due to a database migration issue.",
-            "Customer support ticket volume increased by 20% related to the migration."
-        ],
-        "analysis": "September was a stabilizing period. While marketing efforts brought in new users, our infrastructure struggled to keep up. The focus for next month must be on technical debt reduction and scaling database capacity."
+      "month": "Abril",
+      "sent": 51375,
+      "delivered": 50153,
+      "notSent": 1222,
+      "opensUnique": 16012,
+      "clickUnique": 1052,
+      "unsubscribers": 96,
+      "deliverabilityRate": 0.9762,
+      "notSentRate": 0.0238,
+      "openRate": 0.3193,
+      "ctor": 0.0657,
+      "ctrDelivered": 0.021,
+      "bounceRate": 0.0093,
+      "unsubscribeRate": 0.0019
     },
-     {
-        "version": "August 2026",
-        "date": "2026-08-31",
-        "summary": "A quiet summer month with expected seasonal dips in overall activity.",
-        "growth": [
-            "International traffic grew by 5% as we expanded CDN nodes to Asia.",
-             "Churn rate decreased to 1.2%, the lowest in company history."
-        ],
-        "decline": [
-            "Overall active daily users dropped by 10% (seasonal vacation effect).",
-            "Sales team velocity slowed down, missing quota by 5%."
-        ],
-        "analysis": "As expected for August, business was slower. However, the reduction in churn is a very positive signal that our retention features are working. We used the downtime to prepare for the Q4 push."
+    {
+      "month": "Mayo",
+      "sent": 12895,
+      "delivered": 12430,
+      "notSent": 452,
+      "opensUnique": 4062,
+      "clickUnique": 478,
+      "unsubscribers": 25,
+      "deliverabilityRate": 0.9639,
+      "notSentRate": 0.0351,
+      "openRate": 0.3268,
+      "ctor": 0.1177,
+      "ctrDelivered": 0.0385,
+      "bounceRate": 0.0025,
+      "unsubscribeRate": 0.002
     }
   ],
-  "performanceRadar": {
-      "indicators": [
-          { "name": "Speed", "max": 100 },
-          { "name": "Reliability", "max": 100 },
-          { "name": "Cost", "max": 100 },
-          { "name": "Security", "max": 100 },
-          { "name": "Usability", "max": 100 },
-          { "name": "Support", "max": 100 }
-      ],
-      "data": [
-          { "value": [85, 90, 70, 95, 80, 88], "name": "Current Year" },
-          { "value": [60, 75, 80, 70, 65, 78], "name": "Last Year" }
-      ]
-  },
-  "topRegions": {
-      "categories": ["North America", "Europe", "Asia", "South America", "Africa", "Oceania"],
-      "data": [1200, 950, 800, 600, 300, 150]
-  },
-  "systemHealth": {
-      "value": 88,
-      "name": "Health Score"
-  },
-  "marketingFunnel": [
-      { "value": 100, "name": "Impressions" },
-      { "value": 80, "name": "Clicks" },
-      { "value": 60, "name": "Visits" },
-      { "value": 40, "name": "Inquiries" },
-      { "value": 20, "name": "Orders" }
+  "campaigns": [
+    {
+      "month": "Marzo",
+      "campaign": "MAR_01_CUPON_VENDIMIA_15OFF",
+      "shortLabel": "M-01_CUP_VEND_15OFF",
+      "from": "06/03",
+      "to": "10/03",
+      "sent": 19060,
+      "delivered": 12684,
+      "bounces": 277,
+      "unsubscribers": 30,
+      "notSent": 6098,
+      "notSentRate": 0.3199,
+      "opensTotal": 5070,
+      "opensUnique": 3969,
+      "openRate": 0.3129,
+      "clickTotal": 263,
+      "clickUnique": 186,
+      "ctor": 0.0469,
+      "ctrDelivered": 0.0147,
+      "bounceRate": 0.0145,
+      "unsubscribeRate": 0.0024,
+      "comments": "Comunicado a toda la base"
+    },
+    {
+      "month": "Marzo",
+      "campaign": "MAR_01_CUPON_VENDIMIA_15OFF_NO_ABRIDORES",
+      "shortLabel": "M-01_CUP_VEND_15OFF_NO_ABRIDORES",
+      "from": "20/03",
+      "to": "24/03",
+      "sent": 14845,
+      "delivered": 8383,
+      "bounces": 133,
+      "unsubscribers": 9,
+      "notSent": 6329,
+      "notSentRate": 0.4263,
+      "opensTotal": 797,
+      "opensUnique": 619,
+      "openRate": 0.0738,
+      "clickTotal": 98,
+      "clickUnique": 69,
+      "ctor": 0.1115,
+      "ctrDelivered": 0.0082,
+      "bounceRate": 0.009,
+      "unsubscribeRate": 0.0011,
+      "comments": "Comunicado a toda la base"
+    },
+    {
+      "month": "Marzo",
+      "campaign": "MAR_02_CUPON_MOMENTOS_20K",
+      "shortLabel": "M-02_CUP_MOM_20K",
+      "from": "11/03",
+      "to": "12/03",
+      "sent": 19220,
+      "delivered": 12603,
+      "bounces": 361,
+      "unsubscribers": 21,
+      "notSent": 6254,
+      "notSentRate": 0.3254,
+      "opensTotal": 5189,
+      "opensUnique": 4051,
+      "openRate": 0.3214,
+      "clickTotal": 323,
+      "clickUnique": 224,
+      "ctor": 0.0553,
+      "ctrDelivered": 0.0178,
+      "bounceRate": 0.0188,
+      "unsubscribeRate": 0.0017,
+      "comments": "Comunicado a toda la base"
+    },
+    {
+      "month": "Marzo",
+      "campaign": "MAR_03_DIA_DEL_RIESLING",
+      "shortLabel": "M-03_DIA_DEL_RIESLING",
+      "from": "13/03",
+      "to": "13/03",
+      "sent": 6924,
+      "delivered": 4436,
+      "bounces": 36,
+      "unsubscribers": 6,
+      "notSent": 2452,
+      "notSentRate": 0.3541,
+      "opensTotal": 1798,
+      "opensUnique": 1434,
+      "openRate": 0.3233,
+      "clickTotal": 97,
+      "clickUnique": 74,
+      "ctor": 0.0516,
+      "ctrDelivered": 0.0167,
+      "bounceRate": 0.0052,
+      "unsubscribeRate": 0.0014,
+      "comments": "Comunicado a T2 y T3"
+    },
+    {
+      "month": "Marzo",
+      "campaign": "MAR_05_SELECCIONES_ESPECIALES",
+      "shortLabel": "M-05_SEL_ESPECIALES",
+      "from": "27/03",
+      "to": "31/03",
+      "sent": 12797,
+      "delivered": 12705,
+      "bounces": 174,
+      "unsubscribers": 28,
+      "notSent": 92,
+      "notSentRate": 0.0072,
+      "opensTotal": 5384,
+      "opensUnique": 4083,
+      "openRate": 0.3214,
+      "clickTotal": 419,
+      "clickUnique": 289,
+      "ctor": 0.0708,
+      "ctrDelivered": 0.0227,
+      "bounceRate": 0.0136,
+      "unsubscribeRate": 0.0022,
+      "comments": "Esta fue la primera comunicación que salió a la base sin los Not Sent"
+    },
+    {
+      "month": "Marzo",
+      "campaign": "MAR_04_SEMANA_VERMOUTH",
+      "shortLabel": "M-04_SEMANA_VERMOUTH",
+      "from": "20/03",
+      "to": "20/03",
+      "sent": 19261,
+      "delivered": 12464,
+      "bounces": 331,
+      "unsubscribers": 25,
+      "notSent": 6464,
+      "notSentRate": 0.3356,
+      "opensTotal": 4872,
+      "opensUnique": 3843,
+      "openRate": 0.3083,
+      "clickTotal": 223,
+      "clickUnique": 148,
+      "ctor": 0.0385,
+      "ctrDelivered": 0.0119,
+      "bounceRate": 0.0172,
+      "unsubscribeRate": 0.002,
+      "comments": "Comunicado a toda la base"
+    },
+    {
+      "month": "Abril",
+      "campaign": "ABR_01_CUPON_PASCUA",
+      "shortLabel": "A-01_CUP_PASCUA",
+      "from": "01/04",
+      "to": "06/04",
+      "sent": 12797,
+      "delivered": 12598,
+      "bounces": 170,
+      "unsubscribers": 22,
+      "notSent": 199,
+      "notSentRate": 0.0156,
+      "opensTotal": 4838,
+      "opensUnique": 3790,
+      "openRate": 0.3008,
+      "clickTotal": 252,
+      "clickUnique": 161,
+      "ctor": 0.0425,
+      "ctrDelivered": 0.0128,
+      "bounceRate": 0.0133,
+      "unsubscribeRate": 0.0017,
+      "comments": "Comunicado a toda la base"
+    },
+    {
+      "month": "Abril",
+      "campaign": "ABR_02_LB_MALBEC",
+      "shortLabel": "A-02_LB_MALBEC",
+      "from": "13/04",
+      "to": "17/04",
+      "sent": 12797,
+      "delivered": 12521,
+      "bounces": 149,
+      "unsubscribers": 19,
+      "notSent": 276,
+      "notSentRate": 0.0216,
+      "opensTotal": 5523,
+      "opensUnique": 4114,
+      "openRate": 0.3286,
+      "clickTotal": 560,
+      "clickUnique": 357,
+      "ctor": 0.0868,
+      "ctrDelivered": 0.0285,
+      "bounceRate": 0.0116,
+      "unsubscribeRate": 0.0015,
+      "comments": "Se comunicó a toda la base y se empezó a personalizar el subject con %%FirstName%%."
+    },
+    {
+      "month": "Abril",
+      "campaign": "ABR_03_MALBEC_DE_SANGRE",
+      "shortLabel": "A-03_MALBEC_DE_SANGRE",
+      "from": "21/04",
+      "to": "21/04",
+      "sent": 12886,
+      "delivered": 12549,
+      "bounces": 92,
+      "unsubscribers": 33,
+      "notSent": 337,
+      "notSentRate": 0.0262,
+      "opensTotal": 5342,
+      "opensUnique": 4013,
+      "openRate": 0.3198,
+      "clickTotal": 491,
+      "clickUnique": 332,
+      "ctor": 0.0827,
+      "ctrDelivered": 0.0265,
+      "bounceRate": 0.0071,
+      "unsubscribeRate": 0.0026,
+      "comments": "Se comunicó a toda la base con subject y preheader personalizados."
+    },
+    {
+      "month": "Abril",
+      "campaign": "ABR_04_LANZAMIENTO_DS_CHARDONAY",
+      "shortLabel": "A-04_LANZAMIENTO_DS_CHARDONAY",
+      "from": "24/04",
+      "to": "27/04",
+      "sent": 12895,
+      "delivered": 12485,
+      "bounces": 65,
+      "unsubscribers": 22,
+      "notSent": 410,
+      "notSentRate": 0.0318,
+      "opensTotal": 5255,
+      "opensUnique": 4095,
+      "openRate": 0.328,
+      "clickTotal": 283,
+      "clickUnique": 202,
+      "ctor": 0.0493,
+      "ctrDelivered": 0.0162,
+      "bounceRate": 0.005,
+      "unsubscribeRate": 0.0018,
+      "comments": "Se comunicó a toda la base con subject y preheader personalizados."
+    },
+    {
+      "month": "Mayo",
+      "campaign": "MAY_01_CAVA_REGALO_VERDE",
+      "shortLabel": "MY-01_CAVA_VERDE",
+      "from": "04/05",
+      "to": "05/05",
+      "sent": 9332,
+      "delivered": 8950,
+      "bounces": 19,
+      "unsubscribers": 23,
+      "notSent": 382,
+      "notSentRate": 0.0409,
+      "opensTotal": 5602,
+      "opensUnique": 4012,
+      "openRate": 0.4483,
+      "clickTotal": 1009,
+      "clickUnique": 459,
+      "ctor": 0.1144,
+      "ctrDelivered": 0.0513,
+      "bounceRate": 0.002,
+      "unsubscribeRate": 0.0026,
+      "comments": "Primer envío dividido entre usuarios activos e inactivos, con subject personalizado."
+    },
+    {
+      "month": "Mayo",
+      "campaign": "MAY_01_CAVA_REGALO_ROJO",
+      "shortLabel": "MY-01_CAVA_ROJO",
+      "from": "04/05",
+      "to": "05/05",
+      "sent": 3563,
+      "delivered": 3480,
+      "bounces": 13,
+      "unsubscribers": 2,
+      "notSent": 70,
+      "notSentRate": 0.0196,
+      "opensTotal": 60,
+      "opensUnique": 50,
+      "openRate": 0.0144,
+      "clickTotal": 29,
+      "clickUnique": 19,
+      "ctor": 0.38,
+      "ctrDelivered": 0.0055,
+      "bounceRate": 0.0036,
+      "unsubscribeRate": 0.0006,
+      "comments": "Primer envío dividido entre usuarios activos e inactivos, con subject personalizado."
+    }
   ],
-  "revenueTrend": {
-    "categories": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
-    "data": [820, 932, 901, 934, 1290, 1330, 1320]
+  "subscriptionTable": [
+    {
+      "month": "Marzo",
+      "subscriptions": "No informado",
+      "unsubscribers": 119,
+      "unsubscribeRate": 0.0019,
+      "observation": "Mes con mayor fricción operativa por alto Not Sent."
+    },
+    {
+      "month": "Abril",
+      "subscriptions": "No informado",
+      "unsubscribers": 96,
+      "unsubscribeRate": 0.0019,
+      "observation": "Mejora fuerte en entregabilidad y estabilidad."
+    },
+    {
+      "month": "Mayo",
+      "subscriptions": "No informado",
+      "unsubscribers": 25,
+      "unsubscribeRate": 0.002,
+      "observation": "Primer análisis segmentado entre usuarios activos e inactivos."
+    }
+  ],
+  "reportTexts": {
+    "dashboardIntro": "El período analizado reúne 12 comunicaciones de mailing entre marzo, abril y mayo. En total se enviaron 156.377 piezas, con 125.858 entregadas. El open rate único ponderado fue de 30,25% y el CTOR global fue de 6,62%. El principal cambio operativo se observa en la reducción del Not Sent: las campañas con mayor problema de entrega superaban el 30%, mientras que las campañas depuradas se estabilizan cerca del 2,29%.",
+    "executiveSummary": "El período analizado reúne 12 comunicaciones de mailing entre marzo, abril y mayo. En total se enviaron 156.377 piezas, con 125.858 entregadas. El open rate único ponderado fue de 30,25% y el CTOR global fue de 6,62%. La evolución más relevante está en la mejora de entregabilidad: las campañas con Not Sent alto promediaban 34,80%, mientras que las campañas depuradas bajan a 2,29%.",
+    "volumeDeliverability": "Marzo concentra el mayor volumen de envíos, pero también el mayor problema de distribución: 30,06% de Not Sent y una entregabilidad de 68,70%. En abril y mayo la operación se estabiliza, con tasas de entrega superiores al 96%. Esto indica una mejora clara en la calidad operativa de los envíos.",
+    "engagementByCampaign": "La apertura se mantiene relativamente estable en la mayoría de las campañas, alrededor del 30% al 33%, con una excepción positiva en MAY_01_CAVA_REGALO_VERDE, que alcanza 44,83%. El caso MAY_01_CAVA_REGALO_ROJO muestra un CTOR alto de 38%, pero sobre una base muy chica de aperturas, por lo que no debe leerse como una campaña de mejor rendimiento general.",
+    "qualityFriction": "El mayor problema inicial está en los Not Sent, especialmente en las primeras campañas de marzo. La campaña MAR_05_SELECCIONES_ESPECIALES marca un punto de quiebre: fue la primera comunicación que salió a la base sin los Not Sent y baja a 0,72%. A partir de ahí, la calidad de envío mejora de forma considerable.",
+    "segmentation": "La segmentación de mayo muestra una diferencia muy fuerte entre usuarios activos e inactivos. El segmento Verde concentra el mejor rendimiento real: 44,83% de apertura, 459 clicks únicos y 5,13% de CTR sobre entregados. El segmento Rojo tiene CTOR alto, pero con apenas 50 aperturas y 19 clicks, por lo que el resultado debe interpretarse con cautela.",
+    "subscriptionDisclaimer": "El archivo recibido no incluye datos de nuevas suscripciones o altas. Por ese motivo, el panel informa las desuscripciones reales del CSV y deja las suscripciones como dato pendiente para evitar conclusiones inventadas.",
+    "operationalConclusion": "La principal oportunidad de mejora no está solo en aumentar aperturas o clicks, sino en sostener la calidad de base y reducir fricción de envío. Cuando el Not Sent baja, la lectura de engagement se vuelve más confiable y las campañas permiten comparar mejor creatividad, segmentación y personalización.",
+    "engagementConclusion": "La personalización y la segmentación muestran señales positivas. Abril mejora la estabilidad respecto de marzo y mayo muestra el caso más fuerte con Cava Regalo Verde. Sin embargo, los segmentos chicos deben analizarse con cuidado: un CTOR alto sobre pocas aperturas puede verse atractivo, pero no necesariamente representa mejor rendimiento total.",
+    "finalConclusion": "El dashboard debe ayudar a entender rápidamente tres preguntas: cuánta base se impactó, qué tan bien llegó el envío y qué tan fuerte fue la respuesta del usuario. La lectura recomendada es priorizar entregabilidad primero, engagement después y segmentación como tercera capa de análisis."
   }
 }

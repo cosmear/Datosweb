@@ -1,482 +1,652 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Clock
-    function updateTime() {
-        const now = new Date();
-        document.getElementById('current-time').textContent = now.toLocaleTimeString('es-ES');
-    }
-    setInterval(updateTime, 1000);
-    updateTime();
+const chartRegistry = {};
 
-    // Initialize Charts
-    const lineChartDom = document.getElementById('lineChart');
-    const pieChartDom = document.getElementById('pieChart');
-    const barChartDom = document.getElementById('barChart');
-    const radarChartDom = document.getElementById('radarChart');
-    const hBarChartDom = document.getElementById('hBarChart');
-    const gaugeChartDom = document.getElementById('gaugeChart');
-    const funnelChartDom = document.getElementById('funnelChart');
+function formatNumber(value) {
+  return new Intl.NumberFormat("es-AR").format(Number(value) || 0);
+}
 
-    // Init ECharts instances if elements exist
-    const lineChart = lineChartDom ? echarts.init(lineChartDom, 'dark') : null;
-    const pieChart = pieChartDom ? echarts.init(pieChartDom, 'dark') : null;
-    const barChart = barChartDom ? echarts.init(barChartDom, 'dark') : null;
-    const radarChart = radarChartDom ? echarts.init(radarChartDom, 'dark') : null;
-    const hBarChart = hBarChartDom ? echarts.init(hBarChartDom, 'dark') : null;
-    const gaugeChart = gaugeChartDom ? echarts.init(gaugeChartDom, 'dark') : null;
-    const funnelChart = funnelChartDom ? echarts.init(funnelChartDom, 'dark') : null;
+function formatPercent(value, digits = 2) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "percent",
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(Number(value) || 0);
+}
 
-    // Common Chart Options for "Professional" Look
-    const commonOptions = {
-        backgroundColor: 'transparent',
-        textStyle: {
-            fontFamily: 'Inter, sans-serif'
+function calculateWeightedRates(campaigns) {
+  const totals = campaigns.reduce(
+    (accumulator, campaign) => {
+      accumulator.sent += campaign.sent;
+      accumulator.delivered += campaign.delivered;
+      accumulator.opensUnique += campaign.opensUnique;
+      accumulator.clickUnique += campaign.clickUnique;
+      accumulator.unsubscribers += campaign.unsubscribers;
+      return accumulator;
+    },
+    { sent: 0, delivered: 0, opensUnique: 0, clickUnique: 0, unsubscribers: 0 },
+  );
+
+  return {
+    ...totals,
+    weightedOpenRate: totals.delivered ? totals.opensUnique / totals.delivered : 0,
+    globalCtor: totals.opensUnique ? totals.clickUnique / totals.opensUnique : 0,
+  };
+}
+
+function setText(id, value) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.textContent = value;
+  }
+}
+
+function updateTime() {
+  const time = new Date().toLocaleString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  setText("current-time", time);
+}
+
+function baseChartOptions() {
+  return {
+    backgroundColor: "transparent",
+    animationDuration: 700,
+    textStyle: {
+      fontFamily: "Inter, sans-serif",
+      color: "#0f172a",
+    },
+    grid: {
+      top: 48,
+      left: 20,
+      right: 24,
+      bottom: 50,
+      containLabel: true,
+    },
+    legend: {
+      top: 0,
+      icon: "roundRect",
+      itemWidth: 12,
+      itemHeight: 12,
+      textStyle: {
+        color: "#475569",
+        fontSize: 12,
+      },
+    },
+    tooltip: {
+      trigger: "axis",
+      backgroundColor: "rgba(255,255,255,0.96)",
+      borderColor: "rgba(56, 189, 248, 0.25)",
+      borderWidth: 1,
+      textStyle: {
+        color: "#0f172a",
+      },
+      extraCssText: "box-shadow: 0 18px 40px rgba(14, 165, 233, 0.16); border-radius: 16px;",
+    },
+    xAxis: {
+      type: "category",
+      boundaryGap: false,
+      axisTick: { show: false },
+      axisLine: {
+        lineStyle: {
+          color: "rgba(148, 163, 184, 0.45)",
         },
-        tooltip: {
-            trigger: 'axis',
-            backgroundColor: 'rgba(30, 41, 59, 0.9)',
-            borderColor: '#334155',
-            textStyle: {
-                color: '#e2e8f0'
-            }
-        }
+      },
+      axisLabel: {
+        color: "#64748b",
+        fontSize: 11,
+      },
+    },
+    yAxis: {
+      type: "value",
+      splitNumber: 5,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        color: "#64748b",
+        fontSize: 11,
+      },
+      splitLine: {
+        lineStyle: {
+          color: "rgba(148, 163, 184, 0.18)",
+          type: "dashed",
+        },
+      },
+    },
+  };
+}
+
+function seriesStyle(color) {
+  return {
+    type: "line",
+    smooth: true,
+    symbol: "circle",
+    symbolSize: 8,
+    lineStyle: {
+      width: 3,
+      color,
+    },
+    itemStyle: {
+      color,
+      borderColor: "#ffffff",
+      borderWidth: 2,
+    },
+  };
+}
+
+function renderKpis(data) {
+  const calculated = calculateWeightedRates(data.campaigns);
+  const kpis = data.mailingKpis;
+
+  setText("kpi-campaigns", formatNumber(kpis.campaignsAnalyzed));
+  setText("kpi-sent", formatNumber(calculated.sent));
+  setText("kpi-delivered", formatNumber(calculated.delivered));
+  setText("kpi-open-rate", formatPercent(calculated.weightedOpenRate));
+  setText("kpi-ctor", formatPercent(calculated.globalCtor));
+  setText("kpi-unsubs", formatNumber(calculated.unsubscribers));
+
+  setText("dashboard-intro", data.reportTexts.dashboardIntro);
+  setText("volume-analysis", data.reportTexts.volumeDeliverability);
+  setText("engagement-analysis", data.reportTexts.engagementByCampaign);
+  setText("quality-analysis", data.reportTexts.qualityFriction);
+  setText("segmentation-analysis", data.reportTexts.segmentation);
+  setText("subscription-disclaimer", data.reportTexts.subscriptionDisclaimer);
+  setText("operational-conclusion", data.reportTexts.operationalConclusion);
+  setText("engagement-conclusion", data.reportTexts.engagementConclusion);
+  setText("final-conclusion", data.reportTexts.finalConclusion);
+}
+
+function renderCharts(data) {
+  const monthlyMetrics = data.monthlyMetrics;
+  const campaigns = data.campaigns;
+  const segmentationCampaigns = campaigns.filter((campaign) => campaign.campaign.startsWith("MAY_01_CAVA_REGALO"));
+
+  const colors = {
+    navy: "#0F172A",
+    sky: "#38BDF8",
+    cyan: "#06B6D4",
+    indigo: "#6366F1",
+    emerald: "#10B981",
+    amber: "#F59E0B",
+    rose: "#F43F5E",
+    violet: "#8B5CF6",
+    teal: "#14B8A6",
+  };
+
+  const volumeChart = echarts.init(document.getElementById("volumeDeliverabilityChart"));
+  volumeChart.setOption({
+    ...baseChartOptions(),
+    legend: {
+      ...baseChartOptions().legend,
+      data: ["Enviados", "Entregados", "Not Sent"],
+    },
+    xAxis: {
+      ...baseChartOptions().xAxis,
+      data: monthlyMetrics.map((item) => item.month),
+    },
+    yAxis: {
+      ...baseChartOptions().yAxis,
+      axisLabel: {
+        color: "#64748b",
+        formatter: (value) => formatNumber(value),
+      },
+    },
+    series: [
+      {
+        ...seriesStyle(colors.navy),
+        name: "Enviados",
+        areaStyle: {
+          color: "rgba(15, 23, 42, 0.06)",
+        },
+        data: monthlyMetrics.map((item) => item.sent),
+      },
+      {
+        ...seriesStyle(colors.sky),
+        name: "Entregados",
+        areaStyle: {
+          color: "rgba(56, 189, 248, 0.12)",
+        },
+        data: monthlyMetrics.map((item) => item.delivered),
+      },
+      {
+        ...seriesStyle(colors.amber),
+        name: "Not Sent",
+        data: monthlyMetrics.map((item) => item.notSent),
+      },
+    ],
+  });
+
+  const engagementChart = echarts.init(document.getElementById("engagementChart"));
+  engagementChart.setOption({
+    ...baseChartOptions(),
+    legend: {
+      ...baseChartOptions().legend,
+      data: ["Open Rate único", "CTOR", "CTR sobre entregados"],
+    },
+    xAxis: {
+      ...baseChartOptions().xAxis,
+      data: campaigns.map((campaign) => campaign.shortLabel),
+      axisLabel: {
+        color: "#64748b",
+        interval: 0,
+        rotate: 28,
+        fontSize: 10,
+      },
+    },
+    yAxis: {
+      ...baseChartOptions().yAxis,
+      axisLabel: {
+        color: "#64748b",
+        formatter: (value) => `${value.toFixed(0)}%`,
+      },
+    },
+    tooltip: {
+      ...baseChartOptions().tooltip,
+      valueFormatter: (value) => `${Number(value).toFixed(2)}%`,
+    },
+    series: [
+      {
+        ...seriesStyle(colors.sky),
+        name: "Open Rate único",
+        data: campaigns.map((campaign) => Number((campaign.openRate * 100).toFixed(2))),
+      },
+      {
+        ...seriesStyle(colors.violet),
+        name: "CTOR",
+        data: campaigns.map((campaign) => Number((campaign.ctor * 100).toFixed(2))),
+      },
+      {
+        ...seriesStyle(colors.emerald),
+        name: "CTR sobre entregados",
+        data: campaigns.map((campaign) => Number((campaign.ctrDelivered * 100).toFixed(2))),
+      },
+    ],
+  });
+
+  const qualityChart = echarts.init(document.getElementById("qualityChart"));
+  qualityChart.setOption({
+    ...baseChartOptions(),
+    legend: {
+      ...baseChartOptions().legend,
+      data: ["Not Sent Rate", "Bounce Rate", "Unsubscribe Rate"],
+    },
+    xAxis: {
+      ...baseChartOptions().xAxis,
+      data: campaigns.map((campaign) => campaign.shortLabel),
+      axisLabel: {
+        color: "#64748b",
+        interval: 0,
+        rotate: 28,
+        fontSize: 10,
+      },
+    },
+    yAxis: {
+      ...baseChartOptions().yAxis,
+      axisLabel: {
+        color: "#64748b",
+        formatter: (value) => `${value.toFixed(0)}%`,
+      },
+    },
+    tooltip: {
+      ...baseChartOptions().tooltip,
+      valueFormatter: (value) => `${Number(value).toFixed(2)}%`,
+    },
+    series: [
+      {
+        ...seriesStyle(colors.rose),
+        name: "Not Sent Rate",
+        data: campaigns.map((campaign) => Number((campaign.notSentRate * 100).toFixed(2))),
+      },
+      {
+        ...seriesStyle(colors.amber),
+        name: "Bounce Rate",
+        data: campaigns.map((campaign) => Number((campaign.bounceRate * 100).toFixed(2))),
+      },
+      {
+        ...seriesStyle(colors.teal),
+        name: "Unsubscribe Rate",
+        data: campaigns.map((campaign) => Number((campaign.unsubscribeRate * 100).toFixed(2))),
+      },
+    ],
+  });
+
+  const segmentationChart = echarts.init(document.getElementById("segmentationChart"));
+  segmentationChart.setOption({
+    ...baseChartOptions(),
+    legend: {
+      ...baseChartOptions().legend,
+      data: ["Open Rate", "CTOR", "CTR sobre entregados"],
+    },
+    xAxis: {
+      ...baseChartOptions().xAxis,
+      data: ["Verde", "Rojo"],
+    },
+    yAxis: {
+      ...baseChartOptions().yAxis,
+      axisLabel: {
+        color: "#64748b",
+        formatter: (value) => `${value.toFixed(0)}%`,
+      },
+    },
+    tooltip: {
+      ...baseChartOptions().tooltip,
+      valueFormatter: (value) => `${Number(value).toFixed(2)}%`,
+    },
+    series: [
+      {
+        ...seriesStyle(colors.sky),
+        name: "Open Rate",
+        data: segmentationCampaigns.map((campaign) => Number((campaign.openRate * 100).toFixed(2))),
+      },
+      {
+        ...seriesStyle(colors.indigo),
+        name: "CTOR",
+        data: segmentationCampaigns.map((campaign) => Number((campaign.ctor * 100).toFixed(2))),
+      },
+      {
+        ...seriesStyle(colors.emerald),
+        name: "CTR sobre entregados",
+        data: segmentationCampaigns.map((campaign) => Number((campaign.ctrDelivered * 100).toFixed(2))),
+      },
+    ],
+  });
+
+  chartRegistry.volumeDeliverabilityChart = volumeChart;
+  chartRegistry.engagementChart = engagementChart;
+  chartRegistry.qualityChart = qualityChart;
+  chartRegistry.segmentationChart = segmentationChart;
+}
+
+function renderSubscriptionTable(subscriptionTable) {
+  const body = document.getElementById("subscription-table-body");
+  if (!body) return;
+
+  body.innerHTML = subscriptionTable
+    .map(
+      (row) => `
+        <tr>
+          <td class="px-5 py-4 font-semibold text-slate-800">${row.month}</td>
+          <td class="px-5 py-4">${row.subscriptions}</td>
+          <td class="px-5 py-4">${formatNumber(row.unsubscribers)}</td>
+          <td class="px-5 py-4">${formatPercent(row.unsubscribeRate)}</td>
+          <td class="px-5 py-4 text-slate-500">${row.observation}</td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
+function renderCampaignTable(campaigns) {
+  const body = document.getElementById("campaign-table-body");
+  if (!body) return;
+
+  body.innerHTML = campaigns
+    .map(
+      (campaign) => `
+        <tr>
+          <td class="px-4 py-4 font-medium text-slate-800">${campaign.month}</td>
+          <td class="px-4 py-4 text-slate-600">${campaign.campaign}</td>
+          <td class="px-4 py-4">${formatNumber(campaign.sent)}</td>
+          <td class="px-4 py-4">${formatNumber(campaign.delivered)}</td>
+          <td class="px-4 py-4">${formatPercent(campaign.openRate)}</td>
+          <td class="px-4 py-4">${formatPercent(campaign.ctor)}</td>
+          <td class="px-4 py-4">${formatPercent(campaign.ctrDelivered)}</td>
+          <td class="px-4 py-4">${formatNumber(campaign.notSent)}</td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
+function worksheetHeader(worksheet, rowNumber = 1) {
+  const row = worksheet.getRow(rowNumber);
+  row.font = { bold: true, color: { argb: "FF0F172A" } };
+  row.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFEAF6FF" },
+  };
+  row.eachCell((cell) => {
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFD7EEF9" } },
+      bottom: { style: "thin", color: { argb: "FFD7EEF9" } },
     };
-    
-    // Get accent color from settings
-    let accentHex = '#3b82f6'; // Default
-    if (typeof DashboardTheme !== 'undefined' && DashboardTheme.settings) {
-        accentHex = DashboardTheme.settings.accentColor;
+    cell.alignment = { vertical: "middle", horizontal: "left" };
+  });
+}
+
+function downloadBlob(content, fileName, type) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportMonthlyCsv(data) {
+  const headers = [
+    "Mes",
+    "Enviados",
+    "Entregados",
+    "Not Sent",
+    "Open Rate",
+    "CTOR",
+    "CTR sobre entregados",
+    "Desuscripciones",
+  ];
+  const rows = data.monthlyMetrics.map((item) => [
+    item.month,
+    item.sent,
+    item.delivered,
+    item.notSent,
+    formatPercent(item.openRate),
+    formatPercent(item.ctor),
+    formatPercent(item.ctrDelivered),
+    item.unsubscribers,
+  ]);
+  const csv = [headers, ...rows]
+    .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  downloadBlob(csv, "mailing-metricas.csv", "text/csv;charset=utf-8;");
+}
+
+async function downloadExcelReport(data) {
+  try {
+    if (!window.ExcelJS) {
+      throw new Error("ExcelJS no disponible");
     }
 
-    // Helper to convert hex to rgba
-    function hexToRgba(hex, alpha) {
-        let c;
-        if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
-            c= hex.substring(1).split('');
-            if(c.length== 3){
-                c= [c[0], c[0], c[1], c[1], c[2], c[2]];
-            }
-            c= '0x'+c.join('');
-            return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
-        }
-        return `rgba(59, 130, 246, ${alpha})`; 
-    }
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Codex";
+    workbook.created = new Date();
 
-    // Helper to format currency based on settings
-    function formatCurrency(value) {
-        const s = (typeof DashboardTheme !== 'undefined' && DashboardTheme.settings) ? DashboardTheme.settings : { currency: 'USD', decimals: 2 };
-        let num = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value;
-        if (isNaN(num)) return value;
+    const summarySheet = workbook.addWorksheet("Resumen", {
+      views: [{ state: "frozen", ySplit: 1 }],
+    });
+    summarySheet.columns = [
+      { header: "Indicador", key: "label", width: 34 },
+      { header: "Valor", key: "value", width: 24 },
+    ];
+    worksheetHeader(summarySheet);
 
-        const currencySymbol = {
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£'
-        }[s.currency] || '$';
+    const weightedRates = calculateWeightedRates(data.campaigns);
+    [
+      ["Campañas analizadas", formatNumber(data.mailingKpis.campaignsAnalyzed)],
+      ["Enviados totales", formatNumber(weightedRates.sent)],
+      ["Entregados totales", formatNumber(weightedRates.delivered)],
+      ["Open Rate único ponderado", formatPercent(weightedRates.weightedOpenRate)],
+      ["CTOR global", formatPercent(weightedRates.globalCtor)],
+      ["Desuscripciones totales", formatNumber(weightedRates.unsubscribers)],
+    ].forEach(([label, value]) => summarySheet.addRow({ label, value }));
 
-        return currencySymbol + num.toLocaleString(undefined, {
-            minimumFractionDigits: s.decimals,
-            maximumFractionDigits: s.decimals
-        });
-    }
+    summarySheet.addRow([]);
+    summarySheet.addRow({ label: "Resumen ejecutivo", value: data.reportTexts.executiveSummary });
+    summarySheet.addRow({ label: "Conclusión operativa", value: data.reportTexts.operationalConclusion });
+    summarySheet.addRow({ label: "Conclusión de engagement", value: data.reportTexts.engagementConclusion });
+    summarySheet.addRow({ label: "Conclusión final", value: data.reportTexts.finalConclusion });
+    summarySheet.getColumn("value").alignment = { wrapText: true, vertical: "top" };
 
-    // Fetch Data
-    fetch('data.json')
-        .then(response => response.json())
-        .then(data => {
-            // Update KPIs
-            if(document.getElementById('kpi-revenue')) document.getElementById('kpi-revenue').textContent = formatCurrency(data.kpis.totalRevenue);
-            
-            // Format logic for other numbers might differ (e.g. users is not currency)
-            // But user asked for "decimales y signo peso a dolar a euro", implying money.
-            // Let's assume Users is just a number.
-            if(document.getElementById('kpi-users')) document.getElementById('kpi-users').textContent = data.kpis.activeUsers; 
-            if(document.getElementById('kpi-signups')) document.getElementById('kpi-signups').textContent = data.kpis.newSignups;
-            if(document.getElementById('kpi-satisfaction')) document.getElementById('kpi-satisfaction').textContent = data.kpis.satisfaction;
+    const monthlySheet = workbook.addWorksheet("Métricas mensuales", {
+      views: [{ state: "frozen", ySplit: 1 }],
+    });
+    monthlySheet.columns = [
+      { header: "Mes", key: "month", width: 14 },
+      { header: "Enviados", key: "sent", width: 14 },
+      { header: "Entregados", key: "delivered", width: 14 },
+      { header: "Not Sent", key: "notSent", width: 14 },
+      { header: "Open Rate", key: "openRate", width: 14 },
+      { header: "CTOR", key: "ctor", width: 14 },
+      { header: "CTR sobre entregados", key: "ctrDelivered", width: 20 },
+      { header: "Desuscripciones", key: "unsubscribers", width: 18 },
+    ];
+    worksheetHeader(monthlySheet);
+    data.monthlyMetrics.forEach((item) =>
+      monthlySheet.addRow({
+        month: item.month,
+        sent: item.sent,
+        delivered: item.delivered,
+        notSent: item.notSent,
+        openRate: formatPercent(item.openRate),
+        ctor: formatPercent(item.ctor),
+        ctrDelivered: formatPercent(item.ctrDelivered),
+        unsubscribers: item.unsubscribers,
+      }),
+    );
 
-            // Line Chart (Revenue Trend)
-            if(lineChart) {
-                lineChart.setOption({
-                    ...commonOptions,
-                    color: [accentHex], 
-                    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-                    tooltip: {
-                        trigger: 'axis',
-                        backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                        borderColor: '#334155',
-                        textStyle: { color: '#e2e8f0' },
-                        formatter: function (params) {
-                             let result = params[0].name + '<br/>';
-                             params.forEach(item => {
-                                 result += item.marker + item.seriesName + ': ' + formatCurrency(item.value) + '<br/>';
-                             });
-                             return result;
-                        }
-                    },
-                    xAxis: {
-                        type: 'category',
-                        boundaryGap: false,
-                        data: data.revenueTrend.categories,
-                        axisLine: { lineStyle: { color: '#64748b' } }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        splitLine: { lineStyle: { color: '#334155', type: 'dashed' } },
-                        axisLine: { show: false },
-                        axisLabel: {
-                             formatter: (value) => formatCurrency(value)
-                        }
-                    },
-                    series: [{
-                        name: 'Revenue',
-                        type: 'line',
-                        smooth: true,
-                        lineStyle: { width: 3, color: accentHex },
-                        areaStyle: {
-                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                { offset: 0, color: hexToRgba(accentHex, 0.5) },
-                                { offset: 1, color: hexToRgba(accentHex, 0.0) }
-                            ])
-                        },
-                        data: data.revenueTrend.data,
-                        animationDuration: 2000,
-                        animationEasing: 'cubicOut'
-                    }]
-                });
-            }
+    const campaignsSheet = workbook.addWorksheet("Campañas", {
+      views: [{ state: "frozen", ySplit: 1 }],
+    });
+    campaignsSheet.columns = [
+      { header: "Mes", key: "month", width: 12 },
+      { header: "Campaña", key: "campaign", width: 36 },
+      { header: "Desde", key: "from", width: 10 },
+      { header: "Hasta", key: "to", width: 10 },
+      { header: "Enviados", key: "sent", width: 12 },
+      { header: "Entregados", key: "delivered", width: 12 },
+      { header: "Bounces", key: "bounces", width: 12 },
+      { header: "Unsuscribers", key: "unsubscribers", width: 14 },
+      { header: "Not Sent", key: "notSent", width: 12 },
+      { header: "Not Sent Rate", key: "notSentRate", width: 14 },
+      { header: "Opens Total", key: "opensTotal", width: 14 },
+      { header: "Opens Unique", key: "opensUnique", width: 14 },
+      { header: "Open Rate", key: "openRate", width: 14 },
+      { header: "Click Total", key: "clickTotal", width: 12 },
+      { header: "Click Unique", key: "clickUnique", width: 12 },
+      { header: "CTOR", key: "ctor", width: 12 },
+      { header: "CTR sobre entregados", key: "ctrDelivered", width: 18 },
+      { header: "Comentarios", key: "comments", width: 46 },
+    ];
+    worksheetHeader(campaignsSheet);
+    data.campaigns.forEach((campaign) =>
+      campaignsSheet.addRow({
+        ...campaign,
+        notSentRate: formatPercent(campaign.notSentRate),
+        openRate: formatPercent(campaign.openRate),
+        ctor: formatPercent(campaign.ctor),
+        ctrDelivered: formatPercent(campaign.ctrDelivered),
+      }),
+    );
+    campaignsSheet.getColumn("comments").alignment = { wrapText: true, vertical: "top" };
 
-            // Pie Chart (Traffic Sources)
-            if(pieChart) {
-                pieChart.setOption({
-                    ...commonOptions,
-                    tooltip: { trigger: 'item' },
-                    legend: { top: '5%', left: 'center', textStyle: { color: '#94a3b8' } },
-                    series: [{
-                        name: 'Traffic Source',
-                        type: 'pie',
-                        radius: ['40%', '70%'],
-                        avoidLabelOverlap: false,
-                        itemStyle: {
-                            borderRadius: 10,
-                            borderColor: '#1e293b',
-                            borderWidth: 2
-                        },
-                        label: { show: false, position: 'center' },
-                        emphasis: {
-                            label: { show: true, fontSize: 20, fontWeight: 'bold', color: '#fff' }
-                        },
-                        labelLine: { show: false },
-                        data: data.trafficSource,
-                        animationType: 'scale',
-                        animationEasing: 'elasticOut',
-                        animationDelay: function (idx) { return Math.random() * 200; }
-                    }]
-                });
-            }
+    const subscriptionsSheet = workbook.addWorksheet("Suscripciones", {
+      views: [{ state: "frozen", ySplit: 1 }],
+    });
+    subscriptionsSheet.columns = [
+      { header: "Mes", key: "month", width: 14 },
+      { header: "Suscripciones", key: "subscriptions", width: 18 },
+      { header: "Desuscripciones", key: "unsubscribers", width: 18 },
+      { header: "Tasa de desuscripción sobre entregados", key: "unsubscribeRate", width: 34 },
+      { header: "Observación", key: "observation", width: 44 },
+    ];
+    worksheetHeader(subscriptionsSheet);
+    data.subscriptionTable.forEach((row) =>
+      subscriptionsSheet.addRow({
+        ...row,
+        unsubscribeRate: formatPercent(row.unsubscribeRate),
+      }),
+    );
+    subscriptionsSheet.addRow({});
+    subscriptionsSheet.addRow({
+      month: "Nota",
+      observation: data.reportTexts.subscriptionDisclaimer,
+    });
+    subscriptionsSheet.getColumn("observation").alignment = { wrapText: true, vertical: "top" };
 
-            // Bar/Tower Chart (Server Load)
-            if(barChart) {
-                barChart.setOption({
-                    ...commonOptions,
-                    color: [
-                        accentHex, 
-                        '#3b82f6', 
-                        '#8b5cf6' 
-                    ],
-                    legend: { textStyle: { color: '#94a3b8' } },
-                    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-                    xAxis: {
-                        type: 'category',
-                        data: data.serverLoad.categories,
-                        axisLine: { lineStyle: { color: '#64748b' } }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        splitLine: { lineStyle: { color: '#334155', type: 'dashed' } }
-                    },
-                    series: data.serverLoad.series.map((series, index) => {
-                        let seriesColor = undefined;
-                        if (index === 0) seriesColor = accentHex;
-                        if (index === 1) seriesColor = hexToRgba(accentHex, 0.6);
-                        if (index === 2) seriesColor = '#475569'; 
-                        return {
-                            ...series,
-                            type: 'bar',
-                            stack: 'total',
-                            emphasis: { focus: 'series' },
-                            itemStyle: { 
-                                borderRadius: [0, 0, 0, 0],
-                                color: seriesColor
-                            }
-                        };
-                    })
-                });
-            }
+    const chartsSheet = workbook.addWorksheet("Gráficos");
+    chartsSheet.columns = [{ width: 28 }, { width: 28 }, { width: 28 }, { width: 28 }];
+    const chartTitles = {
+      volumeDeliverabilityChart: "Volumen y entregabilidad mensual",
+      engagementChart: "Engagement por campaña",
+      qualityChart: "Calidad de base y fricción de envío",
+      segmentationChart: "Comparación de segmentación: Cava Regalo",
+    };
 
-            // Radar Chart (Performance)
-            if(radarChart && data.performanceRadar) {
-                 radarChart.setOption({
-                    ...commonOptions,
-                    legend: { data: ['Current Year', 'Last Year'], textStyle: { color: '#94a3b8' } },
-                    radar: {
-                        indicator: data.performanceRadar.indicators,
-                        splitArea: { areaStyle: { color: ['#1e293b', '#0f172a'] } },
-                        axisName: { color: '#94a3b8' },
-                        splitLine: { lineStyle: { color: '#334155' } },
-                        axisLine: { lineStyle: { color: '#334155' } }
-                    },
-                    series: [{
-                        name: 'Performance',
-                        type: 'radar',
-                        data: [
-                            {
-                                value: data.performanceRadar.data[0].value,
-                                name: data.performanceRadar.data[0].name,
-                                itemStyle: { color: accentHex },
-                                areaStyle: { color: hexToRgba(accentHex, 0.4) }
-                            },
-                            {
-                                value: data.performanceRadar.data[1].value,
-                                name: data.performanceRadar.data[1].name,
-                                itemStyle: { color: '#64748b' },
-                                areaStyle: { color: 'rgba(100, 116, 139, 0.2)' }
-                            }
-                        ]
-                    }]
-                });
-            }
-
-            // Horizontal Bar Chart (Top Regions)
-            if(hBarChart && data.topRegions) {
-                hBarChart.setOption({
-                    ...commonOptions,
-                    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-                    tooltip: {
-                         trigger: 'axis',
-                         backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                         borderColor: '#334155',
-                         textStyle: { color: '#e2e8f0' },
-                         formatter: function (params) {
-                             let result = params[0].name + '<br/>';
-                             params.forEach(item => {
-                                 // Assuming Sales is currency
-                                 result += item.marker + item.seriesName + ': ' + formatCurrency(item.value) + '<br/>';
-                             });
-                             return result;
-                        }
-                    },
-                    xAxis: {
-                        type: 'value',
-                        splitLine: { lineStyle: { color: '#334155', type: 'dashed' } },
-                        axisLine: { show: false },
-                        axisLabel: {
-                             formatter: (value) => formatCurrency(value)
-                        }
-                    },
-                    yAxis: {
-                        type: 'category',
-                        data: data.topRegions.categories,
-                        axisLine: { lineStyle: { color: '#64748b' } }
-                    },
-                    series: [{
-                        name: 'Sales',
-                        type: 'bar',
-                        data: data.topRegions.data,
-                        itemStyle: {
-                            color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
-                                { offset: 0, color: accentHex },
-                                { offset: 1, color: hexToRgba(accentHex, 0.3) }
-                            ]),
-                            borderRadius: [0, 4, 4, 0]
-                        },
-                        emphasis: {
-                            itemStyle: {
-                                color: accentHex
-                            }
-                        }
-                    }]
-                });
-            }
-
-            // Gauge Chart (System Health)
-            if(gaugeChart && data.systemHealth) {
-                gaugeChart.setOption({
-                    ...commonOptions,
-                    series: [{
-                        type: 'gauge',
-                        startAngle: 90,
-                        endAngle: -270,
-                        pointer: { show: false },
-                        progress: {
-                            show: true,
-                            overlap: false,
-                            roundCap: true,
-                            clip: false,
-                            itemStyle: {
-                                borderWidth: 1,
-                                borderColor: '#1e293b',
-                                color: accentHex
-                            }
-                        },
-                        axisLine: { lineStyle: { width: 40, color: [[1, '#1e293b']] } },
-                        splitLine: { show: false, distance: 0, length: 10 },
-                        axisTick: { show: false },
-                        axisLabel: { show: false, distance: 50 },
-                        data: [{
-                            value: data.systemHealth.value,
-                            name: data.systemHealth.name,
-                            title: { offsetCenter: ['0%', '-10%'] },
-                            detail: {
-                                valueAnimation: true,
-                                offsetCenter: ['0%', '20%'],
-                                formatter: '{value}%',
-                                color: 'white',
-                                fontSize: 30
-                            }
-                        }],
-                        title: { fontSize: 14, color: '#94a3b8' },
-                        detail: { fontSize: 30, color: '#fff', formatter: '{value}%' }
-                    }]
-                });
-            }
-
-            // Funnel Chart (Marketing)
-            if(funnelChart && data.marketingFunnel) {
-                funnelChart.setOption({
-                    ...commonOptions,
-                    tooltip: { trigger: 'item' },
-                    legend: { top: '5%', left: 'center', textStyle: { color: '#94a3b8' } },
-                    series: [{
-                        name: 'Conversion',
-                        type: 'funnel',
-                        left: '10%',
-                        top: 60,
-                        bottom: 60,
-                        width: '80%',
-                        min: 0,
-                        max: 100,
-                        minSize: '0%',
-                        maxSize: '100%',
-                        sort: 'descending',
-                        gap: 2,
-                        label: { show: true, position: 'inside' },
-                        labelLine: { length: 10, lineStyle: { width: 1, type: 'solid' } },
-                        itemStyle: { borderColor: '#1e293b', borderWidth: 1 },
-                        emphasis: { label: { fontSize: 20 } },
-                        data: data.marketingFunnel.map((item, idx) => {
-                             return {
-                                value: item.value,
-                                name: item.name,
-                                itemStyle: {
-                                    color: hexToRgba(accentHex, 1 - (idx * 0.15))
-                                }
-                            };
-                        })
-                    }]
-                });
-            }
-
-
-        })
-        .catch(error => console.error('Error fetching data:', error));
-
-    // Handle Resize
-    window.addEventListener('resize', () => {
-        if(lineChart) lineChart.resize();
-        if(pieChart) pieChart.resize();
-        if(barChart) barChart.resize();
-        if(radarChart) radarChart.resize();
-        if(hBarChart) hBarChart.resize();
-        if(gaugeChart) gaugeChart.resize();
-        if(funnelChart) funnelChart.resize();
+    let rowOffset = 1;
+    Object.entries(chartRegistry).forEach(([key, chart]) => {
+      chartsSheet.getCell(`A${rowOffset}`).value = chartTitles[key];
+      chartsSheet.getCell(`A${rowOffset}`).font = { bold: true, size: 12 };
+      const imageId = workbook.addImage({
+        base64: chart.getDataURL({
+          type: "png",
+          pixelRatio: 2,
+          backgroundColor: "#FFFFFF",
+        }),
+        extension: "png",
+      });
+      chartsSheet.addImage(imageId, {
+        tl: { col: 0, row: rowOffset },
+        br: { col: 12, row: rowOffset + 15 },
+      });
+      rowOffset += 18;
     });
 
-    // Theme & Simulation Logic
-    const settings = (typeof DashboardTheme !== 'undefined' && DashboardTheme.settings) ? DashboardTheme.settings : { simulateData: false, refreshRate: 0 };
-    
-    // Helper to randomize data slightly
-    function fluctuatingData(originalData, variance = 0.1) {
-        return originalData.map(val => {
-            const change = 1 + (Math.random() * variance * 2 - variance);
-            return Math.floor(val * change);
-        });
+    const buffer = await workbook.xlsx.writeBuffer();
+    downloadBlob(
+      buffer,
+      "mailing-performance-report.xlsx",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+  } catch (error) {
+    console.error("Fallo la exportación Excel, se usa fallback CSV.", error);
+    exportMonthlyCsv(data);
+  }
+}
+
+function handleResize() {
+  Object.values(chartRegistry).forEach((chart) => chart.resize());
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  updateTime();
+  window.setInterval(updateTime, 1000);
+
+  try {
+    const response = await fetch("data.json");
+    const data = await response.json();
+
+    renderKpis(data);
+    renderCharts(data);
+    renderSubscriptionTable(data.subscriptionTable);
+    renderCampaignTable(data.campaigns);
+
+    const downloadButton = document.getElementById("downloadExcelBtn");
+    if (downloadButton) {
+      downloadButton.addEventListener("click", () => downloadExcelReport(data));
     }
+  } catch (error) {
+    console.error("No se pudo cargar data.json", error);
+    setText(
+      "dashboard-intro",
+      "No fue posible cargar los datos del dashboard. Revisá que data.json esté disponible junto al proyecto.",
+    );
+  }
 
-    if (settings.simulateData) {
-        setInterval(() => {
-            // Update KPIs randomly
-            const kpiElem = document.getElementById('kpi-revenue');
-            if(kpiElem) { 
-                let val = parseInt(kpiElem.textContent.replace(/[^0-9]/g, '')) || 124500;
-                val = Math.floor(val * (1 + (Math.random() * 0.02 - 0.01)));
-                // Update with formatting
-                kpiElem.textContent = formatCurrency(val);
-            }
-
-            // Update Chart Data (simulation)
-             if(barChart) {
-                 const currentOption = barChart.getOption();
-                 if(currentOption && currentOption.series) {
-                     const newSeries = currentOption.series.map(s => {
-                         return { 
-                             name: s.name, 
-                             data: fluctuatingData(s.data, 0.2) 
-                        };
-                     });
-                     barChart.setOption({ series: newSeries });
-                 }
-             }
-
-        }, 2000); 
-    }
-
-    // Refresh Page Logic
-    if (settings.refreshRate > 0) {
-        setTimeout(() => {
-            window.location.reload();
-        }, settings.refreshRate * 1000);
-    }
+  window.addEventListener("resize", handleResize);
 });
-
-// Draggable & Resizable Logic
-document.addEventListener('DOMContentLoaded', () => {
-    const grid = document.getElementById('dashboard-grid');
-    if (grid && typeof Sortable !== 'undefined') {
-        new Sortable(grid, {
-            animation: 150,
-            handle: '.drag-handle', // Only drag via handle
-            ghostClass: 'opacity-50', // Class name for the drop placeholder
-            dragClass: 'opacity-100',
-            onEnd: function (evt) {
-                // Logic to save order if needed in future
-            }
-        });
-    }
-});
-
-// Global Resize Function
-window.resizeCard = function(btn, cols) {
-    const card = btn.closest('.card');
-    if (!card) return;
-
-    // Remove existing col-span classes specific to large screens
-    card.classList.remove('lg:col-span-1', 'lg:col-span-2', 'lg:col-span-3', 'lg:col-span-4');
-
-    // Add new class based on selection
-    // Default is col-span-1 if no class logic applies, but we use specific classes
-    if (cols === 1) card.classList.add('lg:col-span-1');
-    if (cols === 2) card.classList.add('lg:col-span-2');
-    if (cols === 3) card.classList.add('lg:col-span-3');
-    if (cols === 4) card.classList.add('lg:col-span-4');
-
-    // Trigger chart resize after transition
-    const chartDiv = card.querySelector('div[id$="Chart"]'); // Matches id ending in Chart
-    if (chartDiv && typeof echarts !== 'undefined') {
-        const chartInstance = echarts.getInstanceByDom(chartDiv);
-        if (chartInstance) {
-            // Use ResizeObserver or timeout to handle transition
-            setTimeout(() => {
-                chartInstance.resize();
-            }, 300); // Match CSS transition duration
-        }
-    }
-};
