@@ -418,6 +418,183 @@ function worksheetHeader(worksheet, rowNumber = 1) {
   });
 }
 
+function getChartSourceRows(chartKey, data) {
+  if (chartKey === "volumeDeliverabilityChart") {
+    return {
+      headers: ["Mes", "Enviados", "Entregados", "Not Sent"],
+      rows: data.monthlyMetrics.map((item) => [item.month, item.sent, item.delivered, item.notSent]),
+    };
+  }
+
+  if (chartKey === "engagementChart") {
+    return {
+      headers: ["Campaña", "Open Rate único", "CTOR", "CTR sobre entregados"],
+      rows: data.campaigns.map((campaign) => [
+        campaign.campaign,
+        Number((campaign.openRate * 100).toFixed(2)),
+        Number((campaign.ctor * 100).toFixed(2)),
+        Number((campaign.ctrDelivered * 100).toFixed(2)),
+      ]),
+    };
+  }
+
+  if (chartKey === "qualityChart") {
+    return {
+      headers: ["Campaña", "Not Sent Rate", "Bounce Rate", "Unsubscribe Rate"],
+      rows: data.campaigns.map((campaign) => [
+        campaign.campaign,
+        Number((campaign.notSentRate * 100).toFixed(2)),
+        Number((campaign.bounceRate * 100).toFixed(2)),
+        Number((campaign.unsubscribeRate * 100).toFixed(2)),
+      ]),
+    };
+  }
+
+  return {
+    headers: ["Segmento", "Open Rate", "CTOR", "CTR sobre entregados"],
+    rows: data.campaigns
+      .filter((campaign) => campaign.campaign.startsWith("MAY_01_CAVA_REGALO"))
+      .map((campaign) => [
+        campaign.campaign.endsWith("VERDE") ? "Verde" : "Rojo",
+        Number((campaign.openRate * 100).toFixed(2)),
+        Number((campaign.ctor * 100).toFixed(2)),
+        Number((campaign.ctrDelivered * 100).toFixed(2)),
+      ]),
+  };
+}
+
+function buildPdfHtml(data) {
+  const weightedRates = calculateWeightedRates(data.campaigns);
+  const ctrDelivered = weightedRates.delivered ? weightedRates.clickUnique / weightedRates.delivered : 0;
+  const chartsMarkup = Object.entries(chartRegistry)
+    .map(([key, chart]) => {
+      const titles = {
+        volumeDeliverabilityChart: "Volumen y entregabilidad mensual",
+        engagementChart: "Engagement por campaña",
+        qualityChart: "Calidad de base y fricción de envío",
+        segmentationChart: "Comparación de segmentación: Cava Regalo",
+      };
+      return `
+        <section class="block chart-block">
+          <h3>${titles[key]}</h3>
+          <img src="${chart.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: "#FFFFFF" })}" alt="${titles[key]}" />
+        </section>
+      `;
+    })
+    .join("");
+
+  const subscriptionRows = data.subscriptionTable
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.month}</td>
+          <td>${row.subscriptions}</td>
+          <td>${formatNumber(row.unsubscribers)}</td>
+          <td>${formatPercent(row.unsubscribeRate)}</td>
+          <td>${row.observation}</td>
+        </tr>
+      `,
+    )
+    .join("");
+
+  return `
+    <!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Mailing Performance Report</title>
+        <style>
+          body { font-family: Inter, Arial, sans-serif; color: #0f172a; margin: 32px; }
+          h1 { font-size: 30px; margin-bottom: 8px; }
+          h2 { font-size: 18px; margin: 28px 0 10px; }
+          h3 { font-size: 16px; margin: 18px 0 12px; }
+          p { color: #475569; line-height: 1.7; }
+          .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0 26px; }
+          .kpi { border: 1px solid #dbeafe; border-radius: 16px; padding: 14px; background: #f8fcff; }
+          .kpi strong { display: block; font-size: 22px; color: #0f172a; margin-top: 6px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+          th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 12px; vertical-align: top; }
+          th { background: #eff6ff; }
+          img { width: 100%; max-width: 960px; height: auto; display: block; border: 1px solid #e2e8f0; border-radius: 18px; }
+          .chart-block { page-break-inside: avoid; margin-top: 24px; }
+          @page { size: A4 landscape; margin: 14mm; }
+        </style>
+        <script>
+          window.addEventListener('load', () => {
+            setTimeout(() => window.print(), 300);
+          });
+        </script>
+      </head>
+      <body>
+        <h1>Mailing Performance Report</h1>
+        <p>Análisis de campañas, entregabilidad, engagement y desuscripciones.</p>
+        <p>${data.reportTexts.executiveSummary}</p>
+
+        <div class="kpis">
+          <div class="kpi">Campañas analizadas<strong>${formatNumber(data.mailingKpis.campaignsAnalyzed)}</strong></div>
+          <div class="kpi">Enviados totales<strong>${formatNumber(weightedRates.sent)}</strong></div>
+          <div class="kpi">Entregados totales<strong>${formatNumber(weightedRates.delivered)}</strong></div>
+          <div class="kpi">Open Rate ponderado<strong>${formatPercent(weightedRates.weightedOpenRate)}</strong></div>
+          <div class="kpi">CTOR global<strong>${formatPercent(weightedRates.globalCtor)}</strong></div>
+          <div class="kpi">CTR entregados<strong>${formatPercent(ctrDelivered)}</strong></div>
+        </div>
+
+        <h2>Gráficos</h2>
+        ${chartsMarkup}
+
+        <h2>Suscripciones y desuscripciones</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Suscripciones</th>
+              <th>Desuscripciones</th>
+              <th>Tasa sobre entregados</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+          <tbody>${subscriptionRows}</tbody>
+        </table>
+        <p>${data.reportTexts.subscriptionDisclaimer}</p>
+
+        <h2>Conclusiones</h2>
+        <p>${data.reportTexts.operationalConclusion}</p>
+        <p>${data.reportTexts.engagementConclusion}</p>
+        <p>${data.reportTexts.finalConclusion}</p>
+      </body>
+    </html>
+  `;
+}
+
+function downloadPdfReport(data) {
+  const html = buildPdfHtml(data);
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const printWindow = window.open(url, "_blank");
+
+  if (!printWindow) {
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.srcdoc = html;
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      window.setTimeout(() => iframe.remove(), 1500);
+    };
+    return;
+  }
+
+  printWindow.addEventListener("load", () => {
+    window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+  });
+}
+
 function downloadBlob(content, fileName, type) {
   const blob = content instanceof Blob ? content : new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -579,19 +756,49 @@ async function downloadExcelReport(data) {
     });
     subscriptionsSheet.getColumn("observation").alignment = { wrapText: true, vertical: "top" };
 
-    const chartsSheet = workbook.addWorksheet("Gráficos");
-    chartsSheet.columns = [{ width: 28 }, { width: 28 }, { width: 28 }, { width: 28 }];
     const chartTitles = {
       volumeDeliverabilityChart: "Volumen y entregabilidad mensual",
       engagementChart: "Engagement por campaña",
       qualityChart: "Calidad de base y fricción de envío",
       segmentationChart: "Comparación de segmentación: Cava Regalo",
     };
-
-    let rowOffset = 1;
     Object.entries(chartRegistry).forEach(([key, chart]) => {
-      chartsSheet.getCell(`A${rowOffset}`).value = chartTitles[key];
-      chartsSheet.getCell(`A${rowOffset}`).font = { bold: true, size: 12 };
+      const sheetName = chartTitles[key].replace(/[:]/g, "").slice(0, 31);
+      const chartSheet = workbook.addWorksheet(sheetName, {
+        views: [{ state: "frozen", ySplit: 2 }],
+      });
+      chartSheet.pageSetup = {
+        orientation: "landscape",
+        paperSize: 9,
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 1,
+        margins: {
+          left: 0.3,
+          right: 0.3,
+          top: 0.5,
+          bottom: 0.5,
+          header: 0.2,
+          footer: 0.2,
+        },
+      };
+      chartSheet.columns = [
+        { width: 22 },
+        { width: 16 },
+        { width: 16 },
+        { width: 18 },
+        { width: 18 },
+      ];
+      chartSheet.getCell("A1").value = chartTitles[key];
+      chartSheet.getCell("A1").font = { bold: true, size: 14, color: { argb: "FF0F172A" } };
+      chartSheet.getCell("A2").value = "Datos fuente";
+      chartSheet.getCell("A2").font = { bold: true, color: { argb: "FF475569" } };
+
+      const source = getChartSourceRows(key, data);
+      chartSheet.addRow(source.headers);
+      worksheetHeader(chartSheet, 3);
+      source.rows.forEach((row) => chartSheet.addRow(row));
+
       const imageId = workbook.addImage({
         base64: chart.getDataURL({
           type: "png",
@@ -600,11 +807,11 @@ async function downloadExcelReport(data) {
         }),
         extension: "png",
       });
-      chartsSheet.addImage(imageId, {
-        tl: { col: 0, row: rowOffset },
-        br: { col: 12, row: rowOffset + 15 },
+      chartSheet.addImage(imageId, {
+        tl: { col: 5.2, row: 1.2 },
+        ext: { width: 960, height: 540 },
       });
-      rowOffset += 18;
+      chartSheet.views = [{ state: "frozen", ySplit: 3, xSplit: 0 }];
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -636,10 +843,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderSubscriptionTable(data.subscriptionTable);
     renderCampaignTable(data.campaigns);
 
-    const downloadButton = document.getElementById("downloadExcelBtn");
-    if (downloadButton) {
-      downloadButton.addEventListener("click", () => downloadExcelReport(data));
-    }
+    document.querySelectorAll('[data-export-action="excel"]').forEach((button) => {
+      button.addEventListener("click", () => downloadExcelReport(data));
+    });
+
+    document.querySelectorAll('[data-export-action="pdf"]').forEach((button) => {
+      button.addEventListener("click", () => downloadPdfReport(data));
+    });
   } catch (error) {
     console.error("No se pudo cargar data.json", error);
     setText(

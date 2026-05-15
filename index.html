@@ -164,7 +164,19 @@
             <a href="settings.html" class="rounded-full px-4 py-2 font-medium text-slate-600 transition hover:bg-sky-50 hover:text-slate-900">Settings</a>
           </div>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
+          <button
+            data-export-action="excel"
+            class="hidden items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:bg-sky-600 lg:inline-flex"
+          >
+            Descargar Excel
+          </button>
+          <button
+            data-export-action="pdf"
+            class="hidden items-center gap-2 rounded-full border border-sky-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft transition hover:bg-sky-50 lg:inline-flex"
+          >
+            Descargar PDF
+          </button>
           <div class="hidden text-right sm:block">
             <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Actualizado</p>
             <p id="current-time" class="text-sm font-medium text-slate-700"></p>
@@ -192,14 +204,24 @@
             <p id="dashboard-intro" class="mt-6 max-w-3xl text-sm leading-7 text-slate-600 md:text-base"></p>
           </div>
           <div class="flex flex-col items-start gap-3 lg:items-end">
-            <button
-              id="downloadExcelBtn"
-              class="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-sky-600"
-            >
-              <span>Descargar reporte Excel</span>
-            </button>
+            <div class="flex flex-wrap gap-3">
+              <button
+                id="downloadExcelBtn"
+                data-export-action="excel"
+                class="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-sky-600"
+              >
+                <span>Descargar reporte Excel</span>
+              </button>
+              <button
+                id="downloadPdfBtn"
+                data-export-action="pdf"
+                class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/90 px-5 py-3 text-sm font-semibold text-slate-700 shadow-soft transition hover:bg-sky-50"
+              >
+                <span>Descargar PDF</span>
+              </button>
+            </div>
             <p class="max-w-xs text-sm leading-6 text-slate-500">
-              Exporta resumen, métricas mensuales, campañas limpias, suscripciones y PNG de gráficos.
+              Excel exporta resumen, métricas, campañas y un gráfico por hoja. PDF abre una versión lista para guardar o imprimir.
             </p>
           </div>
         </div>
