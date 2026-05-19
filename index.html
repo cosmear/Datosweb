@@ -1,431 +1,600 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mailing Performance Report</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              skyglass: {
-                50: "#F7FBFF",
-                100: "#EAF6FF",
-                200: "#CFEAFF",
-                300: "#7DD3FC",
-                400: "#38BDF8",
-                500: "#0EA5E9",
-                900: "#0F172A",
-              },
-            },
-            boxShadow: {
-              glass: "0 24px 80px rgba(14, 165, 233, 0.12)",
-              soft: "0 14px 44px rgba(14, 165, 233, 0.10)",
-            },
-            fontFamily: {
-              sans: ["Inter", "sans-serif"],
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reporte de Mailing - Marzo/Abril 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              light: "#f1f5f9",
+              DEFAULT: "#0ea5e9",
+              dark: "#0f172a", // Navy
+              navy: "#0a192f", // Deep Navy
+              accent: "#38bdf8",
             },
           },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            display: ["Outfit", "sans-serif"],
+          },
+          boxShadow: {
+            premium: "0 20px 40px -10px rgba(0,0,0,0.05)",
+            glass: "0 8px 32px 0 rgba(10, 25, 47, 0.05)",
+            navy: "0 10px 30px -10px rgba(10, 25, 47, 0.5)",
+          }
         },
-      };
-    </script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-    <script src="theme.js"></script>
-    <style>
-      :root {
-        --accent-color: #38bdf8;
-        --accent-secondary: #0ea5e9;
-        --page-bg: #f7fbff;
-        --surface-bg: rgba(255, 255, 255, 0.78);
-        --surface-strong: rgba(255, 255, 255, 0.92);
-        --border-soft: rgba(56, 189, 248, 0.16);
-        --text-main: #0f172a;
-        --text-muted: #64748b;
-        --shadow-soft: rgba(14, 165, 233, 0.12);
-      }
+      },
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="min-h-screen pb-20 relative overflow-x-hidden">
+  
+  <!-- Ambient background blobs -->
+  <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-accent/10 blur-[120px]"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-brand-dark/5 blur-[120px]"></div>
+  </div>
 
-      body {
-        font-family: "Inter", sans-serif;
-        background:
-          radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 28%),
-          radial-gradient(circle at 85% 18%, rgba(125, 211, 252, 0.26), transparent 20%),
-          radial-gradient(circle at 25% 100%, rgba(14, 165, 233, 0.12), transparent 26%),
-          var(--page-bg);
-        color: var(--text-main);
-      }
-
-      .glass-card {
-        background: linear-gradient(180deg, var(--surface-strong), var(--surface-bg));
-        border: 1px solid var(--border-soft);
-        border-radius: 1.75rem;
-        backdrop-filter: blur(18px);
-        box-shadow: 0 24px 80px var(--shadow-soft);
-      }
-
-      .glass-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 32px 90px rgba(14, 165, 233, 0.14);
-      }
-
-      .metric-card {
-        transition:
-          transform 0.25s ease,
-          box-shadow 0.25s ease,
-          border-color 0.25s ease;
-      }
-
-      .metric-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(125, 211, 252, 0.12));
-        pointer-events: none;
-      }
-
-      .panel-grid {
-        display: grid;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-        gap: 1.5rem;
-      }
-
-      .panel-grid > * {
-        grid-column: span 12;
-      }
-
-      @media (min-width: 1024px) {
-        .panel-grid .chart-span {
-          grid-column: span 7;
-        }
-
-        .panel-grid .analysis-span {
-          grid-column: span 5;
-        }
-      }
-
-      .chart-shell {
-        min-height: 360px;
-      }
-
-      .blob {
-        position: fixed;
-        z-index: -1;
-        border-radius: 9999px;
-        filter: blur(60px);
-        opacity: 0.5;
-      }
-
-      .blob-one {
-        top: 6rem;
-        left: -5rem;
-        width: 16rem;
-        height: 16rem;
-        background: rgba(56, 189, 248, 0.18);
-      }
-
-      .blob-two {
-        top: 20rem;
-        right: -4rem;
-        width: 18rem;
-        height: 18rem;
-        background: rgba(125, 211, 252, 0.24);
-      }
-
-      .blob-three {
-        bottom: 2rem;
-        left: 18%;
-        width: 14rem;
-        height: 14rem;
-        background: rgba(14, 165, 233, 0.12);
-      }
-    </style>
-  </head>
-  <body class="min-h-screen antialiased">
-    <div class="blob blob-one"></div>
-    <div class="blob blob-two"></div>
-    <div class="blob blob-three"></div>
-
-    <nav class="sticky top-0 z-50 border-b border-skyglass-200/70 bg-white/72 backdrop-blur-xl">
-      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <div class="flex items-center gap-8">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.32em] text-sky-500">LoopSmith</p>
-            <h1 class="text-lg font-semibold text-slate-900">Mailing Performance Report</h1>
-          </div>
-          <div class="hidden items-center gap-2 rounded-full border border-sky-100 bg-white/80 p-1 text-sm shadow-soft md:flex">
-            <a href="index.html" class="rounded-full bg-sky-500 px-4 py-2 font-semibold text-white">Dashboard</a>
-            <a href="reports.html" class="rounded-full px-4 py-2 font-medium text-slate-600 transition hover:bg-sky-50 hover:text-slate-900">Reports</a>
-            <a href="settings.html" class="rounded-full px-4 py-2 font-medium text-slate-600 transition hover:bg-sky-50 hover:text-slate-900">Settings</a>
-          </div>
+  <main class="w-full max-w-[1600px] mx-auto px-6 md:px-12 lg:px-20 pt-16">
+    
+    <!-- 7.a. Cabecera -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-slate-200 pb-10 mb-12">
+      <div class="max-w-3xl">
+        <p class="text-brand font-semibold tracking-widest uppercase text-sm mb-3">Reporte Estratégico</p>
+        <h1 class="font-display text-5xl md:text-6xl font-bold text-slate-900 leading-tight">Performance de Mailing</h1>
+        <p class="mt-4 text-xl text-slate-500 font-light">Análisis de campaña y comportamiento de la base</p>
+      </div>
+      
+      <div class="flex gap-8 mt-8 md:mt-0 items-center">
+        <!-- Espacio para logos -->
+        <div class="w-32 h-16 bg-white rounded-xl shadow-glass flex items-center justify-center border border-slate-100 overflow-hidden">
+          <img src="images/NMLogo.webp" alt="Logo 1" class="object-contain w-full h-full p-2" /> 
         </div>
-        <div class="flex items-center gap-3">
-          <button
-            data-export-action="excel"
-            class="hidden items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:bg-sky-600 lg:inline-flex"
-          >
-            Descargar Excel
-          </button>
-          <button
-            data-export-action="pdf"
-            class="hidden items-center gap-2 rounded-full border border-sky-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft transition hover:bg-sky-50 lg:inline-flex"
-          >
-            Descargar PDF
-          </button>
-          <div class="hidden text-right sm:block">
-            <p class="text-xs uppercase tracking-[0.24em] text-slate-400">Actualizado</p>
-            <p id="current-time" class="text-sm font-medium text-slate-700"></p>
+        <div class="w-32 h-16 bg-white rounded-xl shadow-glass flex items-center justify-center border border-slate-100 overflow-hidden">
+          <img src="images/LBLogo.webp" alt="Logo 2" class="object-contain w-full h-full p-2" />
+        </div>
+      </div>
+    </header>
+
+    <!-- 7.b. Resumen Ejecutivo -->
+    <section class="glass-panel rounded-3xl p-8 md:p-10 shadow-premium mb-10 w-full">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h2 class="font-display text-2xl font-semibold text-slate-900">Resumen Ejecutivo</h2>
+      </div>
+      <div class="prose prose-slate max-w-none text-lg text-slate-600 leading-relaxed font-light">
+        <!-- Espacio para el mini texto -->
+        <p>En este reporte, analizamos las diferencias, mejoras y learnings vistos durante los primeros dos meses de trabajo junto a Luigi Bosca; asi como tambien, las mejoras implementadas a lo largo de los meses, las diferencias sustanciales de engagement y proximos pasos.</p>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
+      
+      <!-- Columna Izquierda (Principal) -->
+      <div class="xl:col-span-8 space-y-10">
+        
+        <!-- 7.c. Evolución de Entregabilidad -->
+        <section class="navy-panel rounded-3xl p-8 md:p-10 shadow-navy relative overflow-hidden group">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-brand-accent/10 rounded-full blur-3xl group-hover:bg-brand-accent/20 transition-all duration-700"></div>
+          
+          <div class="relative z-10">
+            <div class="flex items-center gap-4 mb-8">
+              <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-brand-accent">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+              </div>
+              <h2 class="font-display text-2xl font-semibold text-white">Evolución de Entregabilidad</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Tarjeta Marzo -->
+              <div class="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+                <p class="text-brand-accent text-sm font-semibold tracking-widest uppercase mb-4">Marzo 2026</p>
+                <div class="space-y-4">
+                  <div>
+                    <p class="text-slate-400 text-sm mb-1">Envíos Realizados</p>
+                    <p class="text-3xl font-display font-semibold text-white">6</p>
+                  </div>
+                  <div class="w-full h-px bg-white/10"></div>
+                  <div>
+                    <p class="text-slate-400 text-sm mb-1">Volumen Enviado</p>
+                    <p class="text-3xl font-display font-semibold text-white">92,107</p>
+                  </div>
+                  <div class="w-full h-px bg-white/10"></div>
+                  <div>
+                    <p class="text-slate-400 text-sm mb-1">Entregabilidad</p>
+                    <p class="text-3xl font-display font-semibold text-emerald-400">68,69%</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Tarjeta Abril -->
+              <div class="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+                <p class="text-brand-accent text-sm font-semibold tracking-widest uppercase mb-4">Abril 2026</p>
+                <div class="space-y-4">
+                  <div>
+                    <p class="text-slate-400 text-sm mb-1">Envíos Realizados</p>
+                    <p class="text-3xl font-display font-semibold text-white">4</p>
+                  </div>
+                  <div class="w-full h-px bg-white/10"></div>
+                  <div>
+                    <p class="text-slate-400 text-sm mb-1">Volumen Enviado</p>
+                    <p class="text-3xl font-display font-semibold text-white">51,379</p>
+                  </div>
+                  <div class="w-full h-px bg-white/10"></div>
+                  <div>
+                    <p class="text-slate-400 text-sm mb-1">Entregabilidad</p>
+                    <p class="text-3xl font-display font-semibold text-emerald-400">97,62%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-100 bg-white/90 text-sm font-bold text-sky-600 shadow-soft">
-            MP
+        </section>
+
+        <!-- 7.d. Engagement -->
+        <section class="glass-panel rounded-3xl p-8 md:p-10 shadow-premium">
+          <div class="flex items-center gap-4 mb-8">
+            <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </div>
+            <h2 class="font-display text-2xl font-semibold text-slate-900">Engagement General</h2>
+          </div>
+          
+          <div class="overflow-hidden rounded-2xl border border-slate-200">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
+                  <th class="px-6 py-4 font-medium border-b border-slate-200">Métrica</th>
+                  <th class="px-6 py-4 font-medium border-b border-slate-200 text-right">Marzo 2026</th>
+                  <th class="px-6 py-4 font-medium border-b border-slate-200 text-right">Abril 2026</th>
+                  <th class="px-6 py-4 font-medium border-b border-slate-200 text-right">Diferencia</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700 bg-white">
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="px-6 py-5 font-medium">Unique Open Rate</td>
+                  <td class="px-6 py-5 text-right text-lg">28,44%</td>
+                  <td class="px-6 py-5 text-right text-lg font-semibold text-emerald-600">31,92%</td>
+                  <td class="px-6 py-5 text-right"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600">+3,48 ppt</span></td>
+                </tr>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="px-6 py-5 font-medium">Unique Open</td>
+                  <td class="px-6 py-5 text-right text-lg">17,999</td>
+                  <td class="px-6 py-5 text-right text-lg font-semibold text-red-600">16,012</td>
+                  <td class="px-6 py-5 text-right"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-600">-1,987</span></td>
+                </tr>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="px-6 py-5 font-medium">Unique Click Rate</td>
+                  <td class="px-6 py-5 text-right text-lg">5,50%</td>
+                  <td class="px-6 py-5 text-right text-lg font-semibold text-emerald-600">6,57%</td>
+                  <td class="px-6 py-5 text-right"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600">+1,07 ppt</span></td>
+                </tr>
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="px-6 py-5 font-medium">Unique Click</td>
+                  <td class="px-6 py-5 text-right text-lg">990</td>
+                  <td class="px-6 py-5 text-right text-lg font-semibold text-emerald-600">1,052</td>
+                  <td class="px-6 py-5 text-right"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600">+62</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Columna Derecha (Lateral) -->
+      <div class="xl:col-span-4 space-y-10">
+        
+
+
+        <!-- 7.f. Suscripciones y Desuscripciones -->
+        <section class="glass-panel rounded-3xl p-8 shadow-premium">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </div>
+            <h2 class="font-display text-xl font-semibold text-slate-900">Movimientos de Base</h2>
+          </div>
+          
+          <div class="overflow-hidden rounded-xl border border-slate-200">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                  <th class="px-4 py-3 font-medium border-b border-slate-200">Mes</th>
+                  <th class="px-4 py-3 font-medium border-b border-slate-200 text-right text-emerald-600">Altas</th>
+                  <th class="px-4 py-3 font-medium border-b border-slate-200 text-right text-rose-600">Bajas</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 bg-white">
+                <tr>
+                  <td class="px-4 py-4 font-semibold text-slate-800">Abril 2026</td>
+                  <td class="px-4 py-4 text-right font-medium text-emerald-600">94</td>
+                  <td class="px-4 py-4 text-right font-medium text-rose-600">96</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-4 font-semibold text-slate-800">Marzo 2026</td>
+                  <td class="px-4 py-4 text-right font-medium text-emerald-600">124</td>
+                  <td class="px-4 py-4 text-right font-medium text-rose-600">119</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 7.g. Composición de Tiers -->
+        <section class="navy-panel rounded-3xl p-8 shadow-navy relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-accent/20 rounded-full blur-3xl"></div>
+          
+          <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-brand-accent">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+              </div>
+              <h2 class="font-display text-xl font-semibold text-white">Composición de Tiers</h2>
+            </div>
+            
+            <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden mb-6">
+              <table class="w-full text-left text-sm">
+                <tbody class="divide-y divide-white/10 text-slate-300">
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="px-4 py-4 font-medium flex items-center gap-2">
+                      <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                      Tier Verde
+                    </td>
+                    <td class="px-4 py-4 text-right font-semibold text-white">9.199</td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="px-4 py-4 font-medium flex items-center gap-2">
+                      <div class="w-2 h-2 rounded-full bg-rose-400"></div>
+                      Tier Rojo
+                    </td>
+                    <td class="px-4 py-4 text-right font-semibold text-white">3.696</td>
+                  </tr>
+                  <tr class="hover:bg-white/5 transition-colors border-t border-white/20">
+                    <td class="px-4 py-4 font-semibold text-white">
+                      Base Completa
+                    </td>
+                    <td class="px-4 py-4 text-right font-bold text-white">12.977</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Próximamente -->
+            <div>
+              <p class="text-xs font-bold tracking-widest text-brand-accent uppercase mb-3">Próximamente</p>
+              <div class="bg-slate-900/50 rounded-xl border border-white/5 overflow-hidden">
+                <table class="w-full text-left text-sm">
+                  <tbody class="divide-y divide-white/5 text-slate-400">
+                    <tr class="opacity-70">
+                      <td class="px-4 py-3">Friends & Family</td>
+                      <td class="px-4 py-3 text-right">--</td>
+                    </tr>
+                    <tr class="opacity-70">
+                      <td class="px-4 py-3">Nuevos compradores</td>
+                      <td class="px-4 py-3 text-right">--</td>
+                    </tr>
+                    <tr class="opacity-70">
+                      <td class="px-4 py-3">Compradores antiguos</td>
+                      <td class="px-4 py-3 text-right">--</td>
+                    </tr>
+                    <tr class="opacity-70">
+                      <td class="px-4 py-3">Nuevos miembros</td>
+                      <td class="px-4 py-3 text-right">--</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="xl:col-span-4 space-y-10">
+
+      </div>
+    </div>
+
+    <section class="glass-panel rounded-3xl p-10 md:p-10 shadow-premium mb-10 w-full">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 class="font-display text-2xl font-semibold text-slate-900">Lo visto hasta ahora</h2>
+          </div>
+          <div class="prose prose-slate max-w-none text-lg text-slate-600 leading-relaxed font-light text-justify">
+            <p class="mb-4">
+              Repasando lo visto hasta ahora, podemos apreciar una mejora sustanciable en la entregabilidad de todos nuestros correos, gracias a la exclusion de todo el segmento de NotSent de la base maestra.
+            </p>
+            <p class="mb-4">
+              Tambien, vemos un aumento significativo del open rate y el click rate en terminos generales, aun considerando la disminución de envios, este numero se mantuvo en valores cercanos y/o superando el valor anterior.
+            </p>
+            <p class="mb-4">
+              Al mismo tiempo, comenzamos a segmentar la base de datos, para poder diferenciar los usuarios activos de los inactivos con nuestro contenido y poder analizar más de cerca que segmento tiene a interactuar o desuscribirse de la base.
+            </p>
+            <p class="mb-4">
+              Por ultimo, queremos mencionar mejoras puntuales realizadas dentro del ecosistema de mailing:
+            </p>
+            
+            <div class="mb-4">
+              <p class="font-semibold text-slate-800 bg-slate-100 inline-block px-3 py-1 rounded-md mb-2">Marzo:</p>
+              <ul class="list-none pl-4 space-y-2">
+                <li class="flex items-start"><span class="mr-2 text-brand">•</span>Quitamos los NotSent de la base con la cual comunicamos en el ultimo envio del mes.</li>
+                <li class="flex items-start"><span class="mr-2 text-brand">•</span>Mejoramos un poco los subjects a partir de los propuestos por la marca.</li>
+              </ul>
+            </div>
+            
+            <div class="mb-2">
+              <p class="font-semibold text-slate-800 bg-slate-100 inline-block px-3 py-1 rounded-md mb-2">Abril:</p>
+              <ul class="list-none pl-4 space-y-2">
+                <li class="flex items-start"><span class="mr-2 text-brand">•</span>Comenzamos a mejorar mucho los subjects, empezamos a usar preheaders y tambien empezamos a usar personalización dentro de los mismos. (Etiquetas para usuarios)</li>
+                <li class="flex items-start"><span class="mr-2 text-brand">•</span>Se realizo el primer envio segmentando a la base por Tiers y personalizando los subjects y preheaders en base al Tier comunicado. (Tier verde: usuarios activos y Tier rojo: usuarios dormidos)</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+    <!-- Nueva sección: Tabla de Métricas de Cupones -->
+    <section class="glass-panel rounded-3xl p-8 md:p-10 shadow-premium mb-10 w-full overflow-hidden">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        <h2 class="font-display text-2xl font-semibold text-slate-900">Performance por Pieza</h2>
+      </div>
+
+      <div class="overflow-x-auto rounded-2xl border border-slate-200 mb-8">
+        <table class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50 text-slate-500">
+            <tr>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200">Pieza</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200">Desde</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200">Hasta</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Enviados</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Entregados</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Unsub</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Opens Totales</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Opens Únicas</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Open Rate</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Clicks Totales</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Clicks Únicos</th>
+              <th class="px-4 py-4 font-semibold border-b border-slate-200 text-right">Click Rate</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 bg-white text-slate-700">
+            <!-- MARZO -->
+            <tr class="bg-slate-50/50">
+              <td colspan="12" class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Marzo</td>
+            </tr>
+            <tr class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-4 py-4 font-medium text-slate-900">VENDIMIA_15OFF</td>
+              <td class="px-4 py-4">06/03</td>
+              <td class="px-4 py-4">10/03</td>
+              <td class="px-4 py-4 text-right">19.060</td>
+              <td class="px-4 py-4 text-right">12.684</td>
+              <td class="px-4 py-4 text-right">30</td>
+              <td class="px-4 py-4 text-right">5.070</td>
+              <td class="px-4 py-4 text-right">3.969</td>
+              <td class="px-4 py-4 text-right font-medium text-emerald-600">31,14%</td>
+              <td class="px-4 py-4 text-right">263</td>
+              <td class="px-4 py-4 text-right">186</td>
+              <td class="px-4 py-4 text-right font-medium text-brand">4,63%</td>
+            </tr>
+            <tr class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-4 py-4 font-medium text-slate-900">VENDIMIA_15OFF_N.A</td>
+              <td class="px-4 py-4">20/03</td>
+              <td class="px-4 py-4">24/03</td>
+              <td class="px-4 py-4 text-right">14.845</td>
+              <td class="px-4 py-4 text-right">8.383</td>
+              <td class="px-4 py-4 text-right">9</td>
+              <td class="px-4 py-4 text-right">797</td>
+              <td class="px-4 py-4 text-right">619</td>
+              <td class="px-4 py-4 text-right font-medium text-emerald-600">7,38%</td>
+              <td class="px-4 py-4 text-right">98</td>
+              <td class="px-4 py-4 text-right">69</td>
+              <td class="px-4 py-4 text-right font-medium text-brand">11,14%</td>
+            </tr>
+            <tr class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-4 py-4 font-medium text-slate-900">MOMENTOS_20K</td>
+              <td class="px-4 py-4">11/03</td>
+              <td class="px-4 py-4">12/03</td>
+              <td class="px-4 py-4 text-right">19.220</td>
+              <td class="px-4 py-4 text-right">12.603</td>
+              <td class="px-4 py-4 text-right">21</td>
+              <td class="px-4 py-4 text-right">5.189</td>
+              <td class="px-4 py-4 text-right">4.051</td>
+              <td class="px-4 py-4 text-right font-medium text-emerald-600">32,14%</td>
+              <td class="px-4 py-4 text-right">323</td>
+              <td class="px-4 py-4 text-right">224</td>
+              <td class="px-4 py-4 text-right font-medium text-brand">5,52%</td>
+            </tr>
+            <!-- ABRIL -->
+            <tr class="bg-slate-50/50">
+              <td colspan="12" class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Abril</td>
+            </tr>
+            <tr class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-4 py-4 font-medium text-slate-900">PASCUA_15OFF</td>
+              <td class="px-4 py-4">01/04</td>
+              <td class="px-4 py-4">06/04</td>
+              <td class="px-4 py-4 text-right">12.797</td>
+              <td class="px-4 py-4 text-right">12.598</td>
+              <td class="px-4 py-4 text-right">22</td>
+              <td class="px-4 py-4 text-right">4.838</td>
+              <td class="px-4 py-4 text-right">3.790</td>
+              <td class="px-4 py-4 text-right font-medium text-emerald-600">30,08%</td>
+              <td class="px-4 py-4 text-right">252</td>
+              <td class="px-4 py-4 text-right">161</td>
+              <td class="px-4 py-4 text-right font-medium text-brand">4,25%</td>
+            </tr>
+            <tr class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-4 py-4 font-medium text-slate-900">MALBEC_20K</td>
+              <td class="px-4 py-4">15/04</td>
+              <td class="px-4 py-4">17/04</td>
+              <td class="px-4 py-4 text-right">12.797</td>
+              <td class="px-4 py-4 text-right">12.521</td>
+              <td class="px-4 py-4 text-right">19</td>
+              <td class="px-4 py-4 text-right">5.523</td>
+              <td class="px-4 py-4 text-right">4.114</td>
+              <td class="px-4 py-4 text-right font-medium text-emerald-600">32,86%</td>
+              <td class="px-4 py-4 text-right">560</td>
+              <td class="px-4 py-4 text-right">357</td>
+              <td class="px-4 py-4 text-right font-medium text-brand">8,68%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Resumen por tipo de cupón -->
+      <div class="mt-8">
+        <h3 class="font-display text-lg font-semibold text-slate-900 mb-4">Resultado Agrupado por Tipo de Cupón</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- 15% OFF -->
+          <div class="navy-panel rounded-2xl p-6 shadow-navy relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-accent/20 rounded-full blur-2xl"></div>
+            <div class="relative z-10">
+              <p class="text-brand-accent text-xs font-bold tracking-widest uppercase mb-4">Cupones de 15%</p>
+              <div class="grid grid-cols-3 gap-2 mb-4">
+                <div>
+                  <p class="text-slate-400 text-xs mb-1">Open Rate</p>
+                  <p class="text-xl font-display font-semibold text-white">24,88%</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 text-xs mb-1">Click Rate</p>
+                  <p class="text-xl font-display font-semibold text-white">4,96%</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 text-xs mb-1">Cantidad de envios</p>
+                  <p class="text-xl font-display font-semibold text-white">3</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-xs text-slate-300 pt-4 border-t border-white/10">
+                <div>
+                  <p class="text-slate-400 mb-1">Delivered</p>
+                  <p class="font-semibold text-white">33.665</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 mb-1">Unique Opens</p>
+                  <p class="font-semibold text-white">8.378</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 mb-1">Unique Clicks</p>
+                  <p class="font-semibold text-white">416</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 20K -->
+          <div class="navy-panel rounded-2xl p-6 shadow-navy relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-400/20 rounded-full blur-2xl"></div>
+            <div class="relative z-10">
+              <p class="text-emerald-400 text-xs font-bold tracking-widest uppercase mb-4">Cupones de 20k</p>
+              <div class="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                  <p class="text-slate-400 text-xs mb-1">Open Rate</p>
+                  <p class="text-xl font-display font-semibold text-white">32,49%</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 text-xs mb-1">Click Rate</p>
+                  <p class="text-xl font-display font-semibold text-white">7,11%</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 text-xs mb-1">Cantidad de envios</p>
+                  <p class="text-xl font-display font-semibold text-white">2</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-xs text-slate-300 pt-4 border-t border-white/10">
+                <div>
+                  <p class="text-slate-400 mb-1">Delivered</p>
+                  <p class="font-semibold text-white">25.124</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 mb-1">Unique Opens</p>
+                  <p class="font-semibold text-white">8.165</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 mb-1">Unique Clicks</p>
+                  <p class="font-semibold text-white">581</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </nav>
+    </section>
 
-    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <section class="glass-card mb-8 overflow-hidden p-6 transition md:p-8">
-        <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div class="max-w-3xl">
-            <p class="mb-3 text-xs font-semibold uppercase tracking-[0.32em] text-sky-500">
-              Performance · Marzo a Mayo
-            </p>
-            <h2 class="max-w-2xl text-3xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-              Mailing Performance Report
-            </h2>
-            <p class="mt-4 max-w-2xl text-base leading-7 text-slate-500 md:text-lg">
-              Análisis de campañas, entregabilidad, engagement y desuscripciones.
-            </p>
-            <p id="dashboard-intro" class="mt-6 max-w-3xl text-sm leading-7 text-slate-600 md:text-base"></p>
-          </div>
-          <div class="flex flex-col items-start gap-3 lg:items-end">
-            <div class="flex flex-wrap gap-3">
-              <button
-                id="downloadExcelBtn"
-                data-export-action="excel"
-                class="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-sky-600"
-              >
-                <span>Descargar reporte Excel</span>
-              </button>
-              <button
-                id="downloadPdfBtn"
-                data-export-action="pdf"
-                class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/90 px-5 py-3 text-sm font-semibold text-slate-700 shadow-soft transition hover:bg-sky-50"
-              >
-                <span>Descargar PDF</span>
-              </button>
-            </div>
-            <p class="max-w-xs text-sm leading-6 text-slate-500">
-              Excel exporta resumen, métricas, campañas y un gráfico por hoja. PDF abre una versión lista para guardar o imprimir.
-            </p>
-          </div>
+    <!-- Nueva sección: Learnings -->
+    <section class="glass-panel rounded-3xl p-10 md:p-10 shadow-premium mb-10 w-full">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
         </div>
-      </section>
+        <h2 class="font-display text-2xl font-semibold text-slate-900">Learnings</h2>
+      </div>
+      <div class="prose prose-slate max-w-none text-lg text-slate-600 leading-relaxed font-light text-justify">
+        <p class="mb-4">Si bien es muy pronto para hablar sobre learnings concretos, ya podemos notar algunas cosas que se van repitiendo en el comportamiento de los usuarios:</p>
+        <ul class="list-none pl-4 space-y-3">
+          <li class="flex items-start"><span class="mr-2 text-brand">•</span>Existe una clara preferencia por el cupón de $20.000 en lugar del cupón del 15% de descuento.</li>
+          <li class="flex items-start"><span class="mr-2 text-brand">•</span>Una menor cantidad de envíos está significando, por ahora, una mayor interacción y una mayor apertura general entre todos los usuarios.</li>
+          <li class="flex items-start"><span class="mr-2 text-brand">•</span>La entregabilidad aumentó un montón desde el momento en que empezamos a excluir a los "NotSent" de la base.</li>
+        </ul>
+      </div>
+    </section>
 
-      <section class="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-        <article class="glass-card metric-card relative overflow-hidden p-6">
-          <p class="relative text-sm font-medium text-slate-500">Campañas analizadas</p>
-          <p id="kpi-campaigns" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
-          <p class="relative mt-3 text-sm text-slate-500">Comunicaciones con métricas válidas dentro del CSV.</p>
-        </article>
-        <article class="glass-card metric-card relative overflow-hidden p-6">
-          <p class="relative text-sm font-medium text-slate-500">Enviados totales</p>
-          <p id="kpi-sent" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
-          <p class="relative mt-3 text-sm text-slate-500">Volumen total impactado entre marzo, abril y mayo.</p>
-        </article>
-        <article class="glass-card metric-card relative overflow-hidden p-6">
-          <p class="relative text-sm font-medium text-slate-500">Entregados totales</p>
-          <p id="kpi-delivered" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
-          <p class="relative mt-3 text-sm text-slate-500">Base que efectivamente recibió la comunicación.</p>
-        </article>
-        <article class="glass-card metric-card relative overflow-hidden p-6">
-          <p class="relative text-sm font-medium text-slate-500">Open Rate único ponderado</p>
-          <p id="kpi-open-rate" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
-          <p class="relative mt-3 text-sm text-slate-500">Calculado sobre aperturas únicas y entregados.</p>
-        </article>
-        <article class="glass-card metric-card relative overflow-hidden p-6">
-          <p class="relative text-sm font-medium text-slate-500">CTOR global</p>
-          <p id="kpi-ctor" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
-          <p class="relative mt-3 text-sm text-slate-500">Clicks únicos sobre aperturas únicas.</p>
-        </article>
-        <article class="glass-card metric-card relative overflow-hidden p-6">
-          <p class="relative text-sm font-medium text-slate-500">Desuscripciones totales</p>
-          <p id="kpi-unsubs" class="relative mt-4 text-4xl font-semibold text-slate-900">--</p>
-          <p class="relative mt-3 text-sm text-slate-500">Se informa el dato real del CSV, sin completar faltantes.</p>
-        </article>
-      </section>
-
-      <section class="panel-grid mb-8">
-        <article class="glass-card chart-span p-6 md:p-7">
-          <div class="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Chart 01</p>
-              <h3 class="mt-2 text-2xl font-semibold text-slate-900">Volumen y entregabilidad mensual</h3>
-            </div>
-          </div>
-          <div id="volumeDeliverabilityChart" class="chart-shell w-full"></div>
-        </article>
-        <article class="glass-card analysis-span p-6 md:p-7">
-          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Análisis</p>
-          <h3 class="mt-2 text-2xl font-semibold text-slate-900">Dónde mejora la operación</h3>
-          <p id="volume-analysis" class="mt-5 text-sm leading-7 text-slate-600 md:text-base"></p>
-          <div class="mt-6 grid gap-4 sm:grid-cols-3">
-            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
-              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Marzo</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">68,70%</p>
-              <p class="mt-1 text-sm text-slate-500">Entregabilidad</p>
-            </div>
-            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
-              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Abril</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">97,62%</p>
-              <p class="mt-1 text-sm text-slate-500">Entregabilidad</p>
-            </div>
-            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
-              <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Mayo</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">96,39%</p>
-              <p class="mt-1 text-sm text-slate-500">Entregabilidad</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="glass-card analysis-span p-6 md:p-7">
-          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Análisis</p>
-          <h3 class="mt-2 text-2xl font-semibold text-slate-900">Lectura de engagement</h3>
-          <p id="engagement-analysis" class="mt-5 text-sm leading-7 text-slate-600 md:text-base"></p>
-          <div class="mt-6 rounded-3xl border border-sky-100 bg-white/80 p-5">
-            <p class="text-xs uppercase tracking-[0.22em] text-slate-400">Insight</p>
-            <p class="mt-3 text-base font-medium leading-7 text-slate-800">
-              Verde lidera por volumen de aperturas y clicks. Rojo se destaca en CTOR, pero con una base mínima.
-            </p>
-          </div>
-        </article>
-        <article class="glass-card chart-span p-6 md:p-7">
-          <div class="mb-5">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Chart 02</p>
-            <h3 class="mt-2 text-2xl font-semibold text-slate-900">Engagement por campaña</h3>
-          </div>
-          <div id="engagementChart" class="chart-shell w-full"></div>
-        </article>
-
-        <article class="glass-card chart-span p-6 md:p-7">
-          <div class="mb-5">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Chart 03</p>
-            <h3 class="mt-2 text-2xl font-semibold text-slate-900">Calidad de base y fricción de envío</h3>
-          </div>
-          <div id="qualityChart" class="chart-shell w-full"></div>
-        </article>
-        <article class="glass-card analysis-span p-6 md:p-7">
-          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Análisis</p>
-          <h3 class="mt-2 text-2xl font-semibold text-slate-900">El quiebre operativo</h3>
-          <p id="quality-analysis" class="mt-5 text-sm leading-7 text-slate-600 md:text-base"></p>
-          <div class="mt-6 space-y-3">
-            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
-              <p class="text-sm font-semibold text-slate-800">0,72% Not Sent</p>
-              <p class="mt-1 text-sm text-slate-500">MAR_05_SELECCIONES_ESPECIALES marca el cambio de calidad más evidente.</p>
-            </div>
-            <div class="rounded-3xl border border-sky-100 bg-white/80 p-4">
-              <p class="text-sm font-semibold text-slate-800">Bounce rate usado en el panel</p>
-              <p class="mt-1 text-sm text-slate-500">Se calcula como Bounces / Enviados para medir fricción sobre el volumen emitido.</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="glass-card analysis-span p-6 md:p-7">
-          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Análisis</p>
-          <h3 class="mt-2 text-2xl font-semibold text-slate-900">Segmentación Cava Regalo</h3>
-          <p id="segmentation-analysis" class="mt-5 text-sm leading-7 text-slate-600 md:text-base"></p>
-        </article>
-        <article class="glass-card chart-span p-6 md:p-7">
-          <div class="mb-5">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Chart 04</p>
-            <h3 class="mt-2 text-2xl font-semibold text-slate-900">Comparación de segmentación: Cava Regalo</h3>
-          </div>
-          <div id="segmentationChart" class="chart-shell w-full"></div>
-        </article>
-      </section>
-
-      <section class="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-        <article class="glass-card p-6 md:p-7">
-          <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Tabla</p>
-              <h3 class="mt-2 text-2xl font-semibold text-slate-900">Suscripciones y desuscripciones</h3>
-            </div>
-          </div>
-          <div class="mt-6 overflow-hidden rounded-[1.5rem] border border-sky-100 bg-white/75">
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-left text-sm">
-                <thead class="bg-sky-50/90 text-slate-500">
-                  <tr>
-                    <th class="px-5 py-4 font-semibold">Mes</th>
-                    <th class="px-5 py-4 font-semibold">Suscripciones</th>
-                    <th class="px-5 py-4 font-semibold">Desuscripciones</th>
-                    <th class="px-5 py-4 font-semibold">Tasa de desuscripción sobre entregados</th>
-                    <th class="px-5 py-4 font-semibold">Observación</th>
-                  </tr>
-                </thead>
-                <tbody id="subscription-table-body" class="divide-y divide-sky-100 text-slate-700"></tbody>
-              </table>
-            </div>
-          </div>
-          <p id="subscription-disclaimer" class="mt-5 text-sm leading-7 text-slate-500"></p>
-        </article>
-
-        <article class="glass-card p-6 md:p-7">
-          <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Conclusiones</p>
-          <h3 class="mt-2 text-2xl font-semibold text-slate-900">Lectura recomendada</h3>
-          <div class="mt-6 space-y-4">
-            <div class="rounded-3xl border border-sky-100 bg-white/80 p-5">
-              <p class="text-sm font-semibold text-slate-800">Operativa</p>
-              <p id="operational-conclusion" class="mt-2 text-sm leading-7 text-slate-600"></p>
-            </div>
-            <div class="rounded-3xl border border-sky-100 bg-white/80 p-5">
-              <p class="text-sm font-semibold text-slate-800">Engagement</p>
-              <p id="engagement-conclusion" class="mt-2 text-sm leading-7 text-slate-600"></p>
-            </div>
-            <div class="rounded-3xl border border-sky-100 bg-white/80 p-5">
-              <p class="text-sm font-semibold text-slate-800">Cierre</p>
-              <p id="final-conclusion" class="mt-2 text-sm leading-7 text-slate-600"></p>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section class="glass-card p-6 md:p-7">
-        <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-sky-500">Detalle</p>
-            <h3 class="mt-2 text-2xl font-semibold text-slate-900">Campañas limpias del CSV</h3>
-          </div>
-          <p class="text-sm text-slate-500">Se ignoran títulos de mes y filas vacías sin métricas.</p>
+    <!-- Nueva sección: Proximos Pasos -->
+    <section class="glass-panel rounded-3xl p-10 md:p-10 shadow-premium mb-10 w-full">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
         </div>
-        <div class="mt-6 overflow-hidden rounded-[1.5rem] border border-sky-100 bg-white/75">
-          <div class="overflow-x-auto">
-            <table class="min-w-full text-left text-sm">
-              <thead class="bg-sky-50/90 text-slate-500">
-                <tr>
-                  <th class="px-4 py-4 font-semibold">Mes</th>
-                  <th class="px-4 py-4 font-semibold">Campaña</th>
-                  <th class="px-4 py-4 font-semibold">Enviados</th>
-                  <th class="px-4 py-4 font-semibold">Entregados</th>
-                  <th class="px-4 py-4 font-semibold">Open Rate</th>
-                  <th class="px-4 py-4 font-semibold">CTOR</th>
-                  <th class="px-4 py-4 font-semibold">CTR entregados</th>
-                  <th class="px-4 py-4 font-semibold">Not Sent</th>
-                </tr>
-              </thead>
-              <tbody id="campaign-table-body" class="divide-y divide-sky-100 text-slate-700"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-    </main>
+        <h2 class="font-display text-2xl font-semibold text-slate-900">Próximos Pasos</h2>
+      </div>
+      <div class="prose prose-slate max-w-none text-lg text-slate-600 leading-relaxed font-light text-justify">
+        <p class="mb-4">Durante los próximos meses, lo ideal sería enfocarnos en los siguientes puntos:</p>
+        <ul class="list-none pl-4 space-y-3">
+          <li class="flex items-start"><span class="mr-2 text-brand">•</span>Mejorar aún más la personalización de subjects y preheaders.</li>
+          <li class="flex items-start"><span class="mr-2 text-brand">•</span>Limpiar un poco más Salesforce de envíos que permanecieron activos y no están ejecutando nada particular, así como también automatizaciones obsoletas.</li>
+          <li class="flex items-start"><span class="mr-2 text-brand">•</span>Mejorar el flujo de trabajo junto a las chicas para tener una mejor planificación de los meses siguientes.</li>
+          <li class="flex items-start"><span class="mr-2 text-brand">•</span>Proponer mejoras en cuanto a las piezas para que sean más interactivas con los usuarios.</li>
+          <li class="flex items-start"><span class="mr-2 text-brand">•</span>Implementar subjects un poco más "agresivos" con el Tier Rojo, fomentando así la interacción y su pasaje al Tier Verde.</li>
+        </ul>
+      </div>
+    </section>
 
-    <script src="script.js"></script>
-  </body>
+    <!-- Botón de Descarga -->
+    <div class="flex justify-center mt-12 mb-16" data-html2canvas-ignore>
+      <button onclick="downloadPDF()" class="bg-slate-900 hover:bg-slate-800 text-white font-display font-semibold py-4 px-10 rounded-full shadow-navy hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center gap-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        Descargar Reporte (PDF)
+      </button>
+    </div>
+  </main>
+
+  <!-- Librería para convertir a PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    function downloadPDF() {
+      const element = document.body;
+      
+      const opt = {
+        margin:       0,
+        filename:     'ReporteLuigiBosca.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, windowWidth: 1600 },
+        jsPDF:        { unit: 'mm', format: 'a3', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
+    }
+  </script>
+</body>
 </html>
